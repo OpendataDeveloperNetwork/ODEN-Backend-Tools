@@ -13,8 +13,9 @@ app.use(express.json());
  * Catch routes that don't exist.
  */
 app.get('*', function (req, res) {
-    res.json({ msg: "Improper route. Check API docs plz." });
-})
+    const errorMessage = `Cannot GET ${req.url}`;
+    res.status(404).send(errorMessage);
+});
 
 app.post('/submitDataNotifier', (req, res) => {
     console.log(req.body);
