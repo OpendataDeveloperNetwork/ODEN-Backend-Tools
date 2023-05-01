@@ -33,7 +33,7 @@ app.post('/submitDataNotifier', (req, res) => {
 
         // Set up a nodemailer transporter using your SMTP settings, found in gmail
         const transporter = nodemailer.createTransport({
-            service: "gmail",
+          service: "gmail",
           host: 'smtp.example.com',
           port: 587,
           secure: false,
