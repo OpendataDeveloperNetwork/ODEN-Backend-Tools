@@ -1,16 +1,24 @@
-const nodemailer = require('nodemailer');
-const express = require('express');
-const bodyParser = require('body-parser');
-const admin = require('firebase-admin');
-
-// Initialize Firebase Admin SDK
-const serviceAccount = require('/path/to/serviceAccountKey.json');
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
 
 // Create a new Express app
 const app = express();
+const nodemailer = require('nodemailer');
+require('dotenv').config();
+const express = require('express');
+const bodyParser = require('body-parser');
+const admin = require('firebase-admin');
+const adminEmail = process.env.EMAIL;
+const password = process.env.PASSWORD;
+
+// Initialize Firebase Admin SDK
+try {
+  const serviceAccount = require("./service-key.json");
+  admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+  });
+} catch (error) {
+  console.log('Error initializing Firebase Admin SDK', error);
+}
+
 
 // Set up body-parser middleware
 app.use(bodyParser.urlencoded({ extended: false }));
