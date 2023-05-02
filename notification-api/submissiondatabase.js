@@ -59,8 +59,7 @@ function notifyUser(userEmail) {
                 console.log(error)
                 return reject({message: `An error occurred`})
             }return resolve({message:"Email sent succesfully"})
-          });
-
+          })
     })
     }
 
