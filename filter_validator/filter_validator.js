@@ -1,20 +1,39 @@
-const firebase = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
+const admin = require('firebase-admin');
 
-firebase.initializeApp({
-  credential: firebase.credential.cert(serviceAccount),
-  databaseURL: 'https://your-project-id.firebaseio.com'
-});
+try {
+    const serviceAccount = require("./service-key.json");
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
+} catch (error) {
+    console.log('Error initializing Firebase Admin SDK (ENSURE IT IS IN FILE DIRECTORY):', error);
+}
 
+const db = admin.firestore();
+
+// Selects the test-validator collection
+const test_validator = db.collection('verified-pool');
+
+// 1. Function to fetch dataset (DONE)
 const Validator = require('jsonschema').Validator
 
-// 1. Function to fetch dataset
 async function fetchDataset() {
-  const db = firebase.firestore();
-  const datasetRef = db.collection('dataset');
-  const datasetSnapshot = await datasetRef.get();
-  const dataset = datasetSnapshot.docs.map(doc => doc.data());
-  return dataset;
+    var newJSONObject = {};
+    
+    // Gets the data from collection
+    const datasetSnapshot = await test_validator.get();
+    
+     if (datasetSnapshot.empty) {
+        console.log('readDataSiteEntrys(): NO DATA FROM DATABASE.');
+        return null;
+    }
+    
+    datasetSnapshot.forEach(doc => {
+        // Add each document to the JSON object
+        newJSONObject[doc.id] = doc.data();
+    });
+
+  return newJSONObject;
 }
 
 // 2. Wrapper function to catch errors
