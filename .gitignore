@@ -1,3 +1,4 @@
 /notification-api/node_modules
 /notification-api/package-lock.json
 /notification-api/.env
+/notification-api/service-key.json
