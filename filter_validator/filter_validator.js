@@ -6,6 +6,8 @@ firebase.initializeApp({
   databaseURL: 'https://your-project-id.firebaseio.com'
 });
 
+const Validator = require('jsonschema').Validator
+
 // 1. Function to fetch dataset
 async function fetchDataset() {
   const db = firebase.firestore();
@@ -54,12 +56,33 @@ async function applyFilters(filters) {
 }
 
 // 3. Function to parse schema and ensure type matches
-function validateData(data, schema) {
-  for (const [field, type] of Object.entries(schema)) {
-    if (typeof data[field] !== type) {
-      throw new Error(`Field ${field} should be of type ${type}`);
+const validateFilter = (dataset, schema) => {
+
+  if (!Array.isArray(dataset))
+    return
+  else if (dataset.length == 0) {
+    console.log("dataset error")
+    return
+  }
+
+  const v = new Validator();
+  let isAllValid = true
+  let isSomeValid = false
+
+  for (const data of dataset) {
+    if (v.validate(data, schema).valid) {
+      isSomeValid = true
+    } else {
+      isAllValid = false
+      
+      if (isSomeValid) {
+        break
+      }
     }
   }
+
+  if (!isSomeValid) console.log("filter error")
+  else if (!isAllValid) console.log("dataset error")
 }
 
 // Sample usage:
