@@ -1,0 +1,17 @@
+{
+  "name": "data-json-tracker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "fs": "^0.0.1-security",
+    "node-fetch": "^3.3.1",
+    "path": "^0.12.7"
+  }
+}
