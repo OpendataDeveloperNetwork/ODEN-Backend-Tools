@@ -1,4 +1,5 @@
-node_modules
 package-lock.json
 package.json
 filter_validator/service-key.json
+# Dependency directories
+node_modules/

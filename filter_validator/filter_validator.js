@@ -15,6 +15,8 @@ const db = admin.firestore();
 const test_validator = db.collection('verified-pool');
 
 // 1. Function to fetch dataset (DONE)
+const Validator = require('jsonschema').Validator
+
 async function fetchDataset() {
     var newJSONObject = {};
     
@@ -72,7 +74,36 @@ async function applyFilters(filters) {
   console.log(logMessage);
 }
 
-  
+// 3. Function to parse schema and ensure type matches
+const validateFilter = (dataset, schema) => {
+
+  if (!Array.isArray(dataset))
+    return
+  else if (dataset.length == 0) {
+    console.log("dataset error")
+    return
+  }
+
+  const v = new Validator();
+  let isAllValid = true
+  let isSomeValid = false
+
+  for (const data of dataset) {
+    if (v.validate(data, schema).valid) {
+      isSomeValid = true
+    } else {
+      isAllValid = false
+      
+      if (isSomeValid) {
+        break
+      }
+    }
+  }
+
+  if (!isSomeValid) console.log("filter error")
+  else if (!isAllValid) console.log("dataset error")
+}
+
 // Sample usage:
 const schema = {
   name: 'string',
