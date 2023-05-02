@@ -46,7 +46,8 @@ function notifyUser(userEmail) {
             from: adminEmail,
             to: userEmail,
             subject: 'Data submission notification',
-            text: `Hello user,
+            text: `
+            Hello user,
   
             Your data has been submitted successfully. Our Admin is reviewing it and you will be notified of your submission status as soon as possible.
             Thank you for your submission!
