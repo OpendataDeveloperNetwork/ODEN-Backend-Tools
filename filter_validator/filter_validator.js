@@ -69,17 +69,20 @@ const validateFilter = (dataset, schema) => {
   let isAllValid = true
   let isSomeValid = false
 
-  dataset.forEach((data) => {
+  for (const data of dataset) {
     if (v.validate(data, schema).valid) {
       isSomeValid = true
     } else {
       isAllValid = false
+      
+      if (isSomeValid) {
+        break
+      }
     }
-  })
+  }
 
   if (!isSomeValid) console.log("filter error")
   else if (!isAllValid) console.log("dataset error")
- 
 }
 
 // Sample usage:
