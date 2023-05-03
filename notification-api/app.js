@@ -19,8 +19,12 @@ app.get('*', function (req, res) {
 app.post('/submitDataNotifier', (req, res) => {
     console.log(req.body);
     console.log(req.body.email);
+
     if (req.body.email) {
         notifyUser(req.body.email)
+    } else{
+        console
+
     }
 });
 

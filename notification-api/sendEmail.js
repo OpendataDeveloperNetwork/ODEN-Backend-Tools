@@ -13,6 +13,9 @@ const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+/**
+ * @summary Notify user if we have received their url submission successfully
+ */
 function notifyUser(userEmail) {
     return new Promise((resolve, reject) => {
         var transporter = nodemailer.createTransport({
@@ -31,7 +34,7 @@ function notifyUser(userEmail) {
             text: `
             Hello user,
   
-            Your data has been submitted successfully. Our Admin is reviewing it and you will be notified of your submission status as soon as possible.
+            Your url (data) has been submitted successfully. Our Admin is reviewing it and you will be notified of your submission status as soon as possible.
             Thank you for your submission!
   
             Kind regards,
@@ -41,7 +44,7 @@ function notifyUser(userEmail) {
           transporter.sendMail(mail_configs, function(error, info){
             if(error) {
                 console.log(error)
-                return reject({message: `An error occurred`})
+                return reject({message: `Email not sent. An error occurred`})
             }return resolve({message:"Email sent succesfully"})
           })
     })
