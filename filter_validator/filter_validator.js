@@ -1,6 +1,7 @@
 const {
   default: axios
 } = require("axios");
+
 const validator = require('jsonschema').Validator;
 
 const filter_blob = `const filter = function (data, std_lib, params) {
@@ -101,176 +102,176 @@ const data = `[{"registryid": 8, "title_of_work": "", "artistprojectstatement": 
 // TODO: Loop through each object and ensure the schema, dataset, and filter fields exist (log if they do or dont)
 // TODO: Fetch the schema, filter, and data from the urls, and ensure they are valid (check to make sure the dataset is json or not ...)
 const test_entries = [{
-        "url": "https://data.calgary.ca/d/2kp2-hsy7", // landing page
-        "labels": {
-            "category": "public-art",
-            "country": "Canada",
-            "region": "Alberta",
-            "city": "Calgary"
-        },
-        "data": {
-            "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
-            "datasets": {
-                "json": {
-                    "url": "https://data.calgary.ca/resource/2kp2-hsy7.json", // dataset
-                    "filters": {
-                        "json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/alberta/calgary/public-art-json-to-json.js" // filter
-                    }
-                }
-            }
-        }
+    "url": "https://data.calgary.ca/d/2kp2-hsy7", // landing page
+    "labels": {
+      "category": "public-art",
+      "country": "Canada",
+      "region": "Alberta",
+      "city": "Calgary"
     },
-    {
-        "url": "http://opendata-saskatoon.cloudapp.net/",
-        "labels": {
-            "category": "",
-            "country": "Canada",
-            "region": "Saskatchewan",
-            "city": "Saskatoon"
-        },
-        "data": {
-            "schema": "",
-            "datasets": {}
+    "data": {
+      "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
+      "datasets": {
+        "json": {
+          "url": "https://data.calgary.ca/resource/2kp2-hsy7.json", // dataset
+          "filters": {
+            "json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/alberta/calgary/public-art-json-to-json.js" // filter
+          }
         }
-    },
-    {
-        "url": "https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art", // landing page
-        "labels": {
-            "category": "public-art",
-            "country": "Canada",
-            "region": "British Columbia",
-            "city": "Prince George"
-        },
-        "data": {
-            "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
-            "datasets": {
-                "geojson": {
-                    "url": "https://services2.arcgis.com/CnkB6jCzAsyli34z/arcgis/rest/services/OpenData_Parks/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson", // dataset
-                    "filters": {
-                        "json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/british-columbia/prince-george/public-art-geojson-to-json.js" // filter
-                    }
-                }
-            }
-        }
-    },
-    {
-        "url": "https://opendata.vancouver.ca/explore/dataset/public-art/", // landing page
-        "labels": {
-            "category": "public-art",
-            "country": "Canada",
-            "region": "British Columbia",
-            "city": "Vancouver"
-        },
-        "data": {
-            "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
-            "datasets": {
-                "json": {
-                    "url": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-art/exports/json?lang=en&timezone=America%2FLos_Angeles", // dataset", // dataset
-                    "filters": {}
-                }
-            }
-        }
+      }
     }
+  },
+  {
+    "url": "http://opendata-saskatoon.cloudapp.net/",
+    "labels": {
+      "category": "",
+      "country": "Canada",
+      "region": "Saskatchewan",
+      "city": "Saskatoon"
+    },
+    "data": {
+      "schema": "",
+      "datasets": {}
+    }
+  },
+  {
+    "url": "https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art", // landing page
+    "labels": {
+      "category": "public-art",
+      "country": "Canada",
+      "region": "British Columbia",
+      "city": "Prince George"
+    },
+    "data": {
+      "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
+      "datasets": {
+        "geojson": {
+          "url": "https://services2.arcgis.com/CnkB6jCzAsyli34z/arcgis/rest/services/OpenData_Parks/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson", // dataset
+          "filters": {
+            "json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/british-columbia/prince-george/public-art-geojson-to-json.js" // filter
+          }
+        }
+      }
+    }
+  },
+  {
+    "url": "https://opendata.vancouver.ca/explore/dataset/public-art/", // landing page
+    "labels": {
+      "category": "public-art",
+      "country": "Canada",
+      "region": "British Columbia",
+      "city": "Vancouver"
+    },
+    "data": {
+      "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
+      "datasets": {
+        "json": {
+          "url": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-art/exports/json?lang=en&timezone=America%2FLos_Angeles", // dataset", // dataset
+          "filters": {}
+        }
+      }
+    }
+  }
 ]
 
 // Fake filter return value
 // if errors is 0 then correctness is 100%
 const return_value_test_1 = {
-    data: [{
-            name: "x",
-            coordinates: [{
-                "X": 0
-            }, {
-                "Y": 0
-            }]
-        },
-        {
-            name: "re",
-            coordinates: [{
-                "X": 12
-            }, {
-                "Y": 133
-            }]
-        },
-        {
-            name: "3",
-            coordinates: [{
-                "X": 2
-            }, {
-                "Y": 3
-            }]
-        }
-    ],
-    errors: []
+  data: [{
+      name: "x",
+      coordinates: [{
+        "X": 0
+      }, {
+        "Y": 0
+      }]
+    },
+    {
+      name: "re",
+      coordinates: [{
+        "X": 12
+      }, {
+        "Y": 133
+      }]
+    },
+    {
+      name: "3",
+      coordinates: [{
+        "X": 2
+      }, {
+        "Y": 3
+      }]
+    }
+  ],
+  errors: []
 }
 
 // Should calculate the correctness value of this as data / errors
 const return_value_test_2 = {
-    data: [{
-            name: "x",
-            coordinates: [{
-                "X": 0
-            }, {
-                "Y": 0
-            }]
-        },
-        {
-            name: "re",
-            coordinates: [{
-                "X": 12
-            }, {
-                "Y": 133
-            }]
-        }
-    ],
-    errors: [{
-        type: 'missing-field',
-        missing_field: 'name',
-        data_entry: {
-            coordinates: [{
-                "X": 12
-            }, {
-                "Y": 133
-            }]
-        }
-    }]
+  data: [{
+      name: "x",
+      coordinates: [{
+        "X": 0
+      }, {
+        "Y": 0
+      }]
+    },
+    {
+      name: "re",
+      coordinates: [{
+        "X": 12
+      }, {
+        "Y": 133
+      }]
+    }
+  ],
+  errors: [{
+    type: 'missing-field',
+    missing_field: 'name',
+    data_entry: {
+      coordinates: [{
+        "X": 12
+      }, {
+        "Y": 133
+      }]
+    }
+  }]
 }
 // conforms to schema fails, and calculate the correctness value
 const return_value_test_3 = {
-    data: [{
-            name: "x",
-            coordinates: [{
-                "X": 0
-            }, {
-                "Y": 0
-            }]
-        },
-        {
-            name: "re",
-            coordinates: [{
-                "X": 12
-            }, {
-                "Y": 133
-            }]
-        }
-    ],
-    errors: [{
-            type: 'missing-field',
-            missing_field: 'name',
-            data_entry: {
-                coordinates: [{
-                    "X": 12
-                }, {
-                    "Y": 133
-                }]
-            }
-        },
-        {
-            type: 'validation',
-            validation_result: {},
-            data_entry: {}
-        }
-    ]
+  data: [{
+      name: "x",
+      coordinates: [{
+        "X": 0
+      }, {
+        "Y": 0
+      }]
+    },
+    {
+      name: "re",
+      coordinates: [{
+        "X": 12
+      }, {
+        "Y": 133
+      }]
+    }
+  ],
+  errors: [{
+      type: 'missing-field',
+      missing_field: 'name',
+      data_entry: {
+        coordinates: [{
+          "X": 12
+        }, {
+          "Y": 133
+        }]
+      }
+    },
+    {
+      type: 'validation',
+      validation_result: {},
+      data_entry: {}
+    }
+  ]
 }
 
 const test_validate = async function () {
@@ -278,13 +279,18 @@ const test_validate = async function () {
     url: "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/main/schemas/public-art.json",
     method: 'GET',
     responseType: 'blob',
+  }).catch((err) => {
+    console.log(err)
   })
 
   let std_lib_raw = await axios({
     url: "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/libraries/standard.js",
     method: 'GET',
     responseType: 'blob',
+  }).catch((err) => {
+    console.log(err)
   })
+
   const std_lib = new Function(std_lib_raw.data)();
 
   const filter = new Function(filter_blob)();
@@ -294,52 +300,64 @@ const test_validate = async function () {
 }
 
 const parseEntries = async () => {
-  
+
   for (const entry of test_entries) {
-    const schemaUrl = entry.data?.schema
-    
+    const schemaUrl = entry.data.schema
+
     let schema
     try {
-      schema = fetchUrl(schemaUrl)
+      schema = await fetchUrl(schemaUrl)
     } catch (err) {
-        console.log(err)
-        break
+      console.log("Schema url invalid for: " + entry.url + "\n")
+      continue
     }
-  
+
     const datasets = entry.data.datasets || {}
-    
+
+    if (Object.keys(datasets).length == 0)
+      console.log("No datasets for: " + entry.url + "\n")
+
     for (const [type, datasetObj] of Object.entries(datasets)) {
-      const datasetUrl = datasetObj?.url || {};
+      const datasetUrl = datasetObj.url || {};
 
       let dataset
       try {
-        dataset = fetchUrl(datasetUrl)
+        dataset = await fetchUrl(datasetUrl)
       } catch (err) {
-          console.log(err)
-          break
+        console.log("Dataset url invalid for: " + entry.url + "\n")
+        continue
       }
 
-      const filters = dataset.filters || {};
-      
+      const filters = datasetObj.filters || {};
+
+      if (Object.keys(filters).length == 0)
+        console.log("No filter for: " + entry.url + "\n")
+
+
       for (const [type, url] of Object.entries(filters)) {
-        
+
         let filter
         try {
-            filter = fetchUrl(url)
+          filter = await fetchUrl(url)
         } catch (err) {
-            console.log(err)
-            break
+          console.log("Filter url invalid for: " + entry.url + "\n")
+          continue
         }
-        console.log("This entry is valid for: " + entry.url)
+        console.log("VALID ENTRY: " + entry.url + "\n")
+
 
         // validateFilter(filter, dataset, schema, std_lib)
       }
-    }
+
+
+
     }
   }
+}
 
 
 const fetchUrl = async (urlParam) => {
+
   const data = await axios({
     url: urlParam,
     method: 'GET',
@@ -366,6 +384,5 @@ const validateFilter = (filter, data, schema, std_lib) => {
   }
 }
 
-test_validate();
-
-// Simar added this comment
+// test_validate();
+parseEntries();
