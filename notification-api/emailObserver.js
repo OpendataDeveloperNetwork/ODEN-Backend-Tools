@@ -1,5 +1,6 @@
 const admin = require("firebase-admin")
 let adminEmails = [];
+let subscribers = {};
 
 try {
     const serviceAccount = require("./service-key.json");
@@ -11,26 +12,34 @@ try {
 }
 
 const db = admin.firestore();
-const notificationApiRef = db.collection('notification-api');
-const AdminRef = notificationApiRef.doc('admins');
+const notificationApiSubscriberRef = db.collection('notification-api').doc('subscribers');
 
 /**
- * Observer to keep an updated array of admin emails.
+ * Observer for email subscriptions.
  */
-const adminEmailObserver = AdminRef.onSnapshot(docSnapshot => {
-    console.log(`Received document snapshot: ${docSnapshot}`);
-    // console.log(`Admin subscriber email list: ${docSnapshot.data().verifyLinkSubscribers}`)
-    adminEmails = docSnapshot.data().verifyLinkSubscribers;
-    console.log(`adminEmails = ${adminEmails}`);
+const subscriberObserver = notificationApiSubscriberRef.onSnapshot(docSnapshot => {
+    // Grabs a snapshot of the 'subscriber' doc and loops through each array, appending to `subscriber` map.
+    const data = docSnapshot.data();
+
+    Object.keys(data).forEach((key) => {
+        // adds only arrays to the `subscriber` map.
+        if (Array.isArray(data[key])) {
+            subscribers[key] = data[key];
+        }
+    });
+
+    for (const key in subscribers) {
+        console.log(`${key}: ${subscribers[key]}`);
+      }
 }, err => {
-    console.error(`Error retrieving admin's verify link subscriber list: ${err}`);
+    console.error(`Error retrieving Subscriber document snapshot: ${err}`);
 });
 
-function getAdminEmails() {
-    return adminEmails;
+function getSubscribers() {
+    return subscribers;
 }
 
 module.exports = {
-    getAdminEmails, 
-    adminEmailObserver
+    getSubscribers,
+    subscriberObserver
 };
