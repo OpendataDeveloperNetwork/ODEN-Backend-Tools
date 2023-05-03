@@ -308,8 +308,8 @@ const parseEntries = async () => {
   
     const datasets = entry.data.datasets || {}
     
-    for (const [type, dataset] of Object.entries(datasets)) {
-      const datasetUrl = dataset?.url || {};
+    for (const [type, datasetObj] of Object.entries(datasets)) {
+      const datasetUrl = datasetObj?.url || {};
 
       let dataset
       try {
