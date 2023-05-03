@@ -302,7 +302,7 @@ const test_validate = async function () {
 const parseEntries = async () => {
 
   for (const entry of test_entries) {
-    const schemaUrl = entry.data.schema
+    const schemaUrl = entry.data?.schema
 
     let schema
     try {
