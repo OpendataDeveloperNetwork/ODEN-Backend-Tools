@@ -3,7 +3,7 @@ const axios = require('axios');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 
-const { getSubscribers } = require('./emailObserver');
+const { getSubscribers, addObservers } = require('./emailObserver');
 const { notifyUser } = require('./sendEmail')
 
 const app = express();
@@ -71,10 +71,15 @@ app.post('/submitDataNotifier', (req, res) => {
             .then((result) => {
                 console.log(`/submitDataNotifier send notification to admin: ${email}`);
             }).catch((error) => {
-                console.error(`Error: ${error.message}\n
-                Did not send email to ${email}`);
+                console.error(`Error: Did not send email to ${email}`, error);
             });
     });
+});
+
+app.post("/addObservers", (req, res) => {
+    console.log(`User: ${req.body.email} is subscribing to receive notifications from ${req.body.categories}`);
+    addObservers(req.body.email, req.body.categories)
+    res.status(200).send("Successfully added all emails to subscriber document.");
 });
 
 // Export the app.
