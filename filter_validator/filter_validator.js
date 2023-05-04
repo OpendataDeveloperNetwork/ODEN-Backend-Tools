@@ -174,28 +174,26 @@ const test_entries = [{
   }
 ]
 
-const test_entries_for_validator = [
-	{
-    "url": "https://opendata.vancouver.ca/explore/dataset/public-art/", // landing page
-    "labels": {
-      "category": "public-art",
-      "country": "Canada",
-      "region": "British Columbia",
-      "city": "Vancouver"
-    },
-    "data": {
-      "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
-      "datasets": {
-        "json": {
-          "url": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-art/exports/json?lang=en&timezone=America%2FLos_Angeles", // dataset", // dataset
-          "filters": {
-						"json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/british-columbia/vancouver/public-art-json-to-json.js"
-					}
+const test_entries_for_validator = [{
+  "url": "https://opendata.vancouver.ca/explore/dataset/public-art/", // landing page
+  "labels": {
+    "category": "public-art",
+    "country": "Canada",
+    "region": "British Columbia",
+    "city": "Vancouver"
+  },
+  "data": {
+    "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
+    "datasets": {
+      "json": {
+        "url": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-art/exports/json?lang=en&timezone=America%2FLos_Angeles", // dataset", // dataset
+        "filters": {
+          "json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/british-columbia/vancouver/public-art-json-to-json.js"
         }
       }
     }
   }
-]
+}]
 
 // Fake filter return value
 // if errors is 0 then correctness is 100%
@@ -319,90 +317,102 @@ const test_validate = async function () {
   const filter = new Function(filter_blob)();
 
 
-	validateFilter(filter, data, schema.data, std_lib)
+  validateFilter(filter, data, schema.data, std_lib)
 }
 
 const validateEntries = async (entries) => {
 
-	axios({
+  axios({
     url: "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/libraries/standard.js",
     method: 'GET',
     responseType: 'blob',
   }).then(async res => {
-		try {
-			const stdLibFunc = Function(res.data)()
+    try {
+      const stdLibFunc = Function(res.data)()
 
-			for (const entry of entries) {
-				const {filter: [filterKey, filter] = [], dataset: [datasetKey, dataset] = [], schema} = await parseEntry(entry)
-				const filterFunc = Function(filter)()
-				const correctness = validateFilter(filterFunc, dataset, schema, stdLibFunc)
+      for (const entry of entries) {
+        const {
+          filter: [filterKey, filter] = [],
+          dataset: [datasetKey, dataset] = [],
+          schema
+        } = await parseEntry(entry)
+        const filterFunc = Function(filter)()
+        const correctness = validateFilter(filterFunc, dataset, schema, stdLibFunc)
 
-				if (correctness !== undefined) {
-					console.log(correctness)
-				}
-			}
-		} catch (err) {
-			console.log(err)
-		}
-	}).catch(err => {
+        if (correctness !== undefined) {
+          console.log("Correctness is: " + correctness)
+        } else {
+          console.log("Correctness is undefined")
+        }
+
+
+
+        console.log("")
+
+
+      }
+    } catch (err) {
+      console.log(err)
+    }
+  }).catch(err => {
     console.log("Error fetching standard library.")
   })
 }
 
 const parseEntry = async (entry) => {
 
-	const schemaUrl = entry.data?.schema
+  const schemaUrl = entry.data.schema
 
-	let schema
-	try {
-		schema = await fetchUrlData(schemaUrl, "schema")
-	} catch (err) {
-		console.log("Schema url invalid for: " + entry.url + "\n")
-		return {}
-	}
+  let schema
+  try {
+    schema = await fetchUrlData(schemaUrl, "schema")
+  } catch (err) {
+    console.log("Schema url invalid for: " + entry.url)
+    return {}
+  }
 
-	const datasets = entry.data.datasets || {}
+  const datasets = entry.data.datasets || {}
 
-	if (Object.keys(datasets).length == 0)
-		console.log("No datasets for: " + entry.url + "\n")
+  if (Object.keys(datasets).length == 0)
+    console.log("No datasets for: " + entry.url)
 
-	for (const [datasetKey, datasetObj] of Object.entries(datasets)) {
-		const datasetUrl = datasetObj.url || {};
+  for (const [datasetKey, datasetObj] of Object.entries(datasets)) {
+    const datasetUrl = datasetObj.url || {};
 
-		let dataset
-		try {
-			dataset = await fetchUrlData(datasetUrl, "dataset")
-		} catch (err) {
-			console.log("Dataset url invalid for: " + entry.url + "\n")
-			continue
-		}
+    let dataset
+    try {
+      dataset = await fetchUrlData(datasetUrl, "dataset")
+    } catch (err) {
+      console.log("Dataset url invalid for: " + entry.url)
+      continue
+    }
 
-		const filters = datasetObj.filters || {};
+    const filters = datasetObj.filters || {};
 
-		if (Object.keys(filters).length == 0)
-			console.log("No filter for: " + entry.url + "\n")
+    if (Object.keys(filters).length == 0)
+      console.log("No filter for: " + entry.url)
 
 
-		for (const [filterKey, url] of Object.entries(filters)) {
-			let filter
+    for (const [filterKey, url] of Object.entries(filters)) {
+      let filter
 
-			try {
-				filter = await fetchUrlData(url, "filter")
-			} catch (err) {
-				console.log("Filter url invalid for: " + entry.url + "\n")
-				continue
-			}
-			console.log("VALID ENTRY: " + entry.url + "\n")
+      try {
+        filter = await fetchUrlData(url, "filter")
+      } catch (err) {
+        console.log("Filter url invalid for: " + entry.url)
+        continue
+      }
+      console.log("VALID ENTRY: " + entry.url)
 
-			return {
-				'filter': [filterKey, filter],
-				'dataset': [datasetKey, dataset],
-				'schema': schema
-			}
-		}
-	}
+      return {
+        'filter': [filterKey, filter],
+        'dataset': [datasetKey, dataset],
+        'schema': schema
+      }
+    }
+  }
 
-	return {}
+  return {}
 }
 
 
@@ -417,10 +427,10 @@ const fetchUrlData = async (urlParam, type) => {
   })
 
   if (["schema", "dataset"].includes(type) && !(res.headers.get("Content-Type").includes('application/json') || urlParam.endsWith(".json"))) {
-			throw Error
+    throw Error
   } else if (type == "filter" && !(res.headers.get("Content-Type").includes('text/plain') || urlParam.endsWith(".js"))) {
-			throw Error
-	}
+    throw Error
+  }
 
   return res.data
 }
@@ -429,15 +439,17 @@ const validateFilter = (filter, dataset, schema, stdLib) => {
   const v = new validator();
 
   try {
-		const {data = [], errors = []} = filter(dataset, stdLib, schema, v, false) || {}
-		
-		if (errors.length > 0) {
-			return data.length / (data.length + errors.length)
-		}
+    const {
+      data = [], errors = []
+    } = filter(dataset, stdLib, schema, v, false) || {}
+
+    if (errors.length > 0) {
+      return data.length / (data.length + errors.length)
+    }
   } catch (err) {
-    console.log(err)
+    console.log("Filter is invalid with the following error:\n" + err)
   }
 }
 
 // test_validate();
-validateEntries(test_entries_for_validator)
+validateEntries(test_entries)
