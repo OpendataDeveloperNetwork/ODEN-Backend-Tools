@@ -6,6 +6,22 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 /**
+ * Removes the protocol from the url
+ * @param {string} url URL to remove the protocol from
+ * @returns New url without the protocol (i.e. https://www.google.com -> www.google.com)
+ */
+function remove_url_protocol(url) {
+  // check if the url passed in is an array
+  if (Array.isArray(url)) { 
+    const urlsWithoutProtocol = url.map((url) => {
+      return url.replace(/^https?:\/\//i, '');
+    });
+    return urlsWithoutProtocol;
+  }
+  return url.replace(/^https?:\/\//i, '');
+}
+
+/**
  * Downloads the files from the link and saves them to the directory
  * @param {string} link Link to the file
  * @returns {boolean} True if the file was downloaded successfully, false otherwise
@@ -25,7 +41,7 @@ async function downloadFiles(link) {
     }
 
     // Get rid of slashes in the filename
-    const filename = link.replace(/\//g, '-');
+    const filename = remove_url_protocol(link).replace(/:|\//g, "-");;
     const destPath = join(process.env.DOWNLOAD_DIRECTORY, filename);
 
     // Write the file to the directory
@@ -37,7 +53,7 @@ async function downloadFiles(link) {
       dest.on('error', reject);
     });
 
-    console.log(`Downloaded ${filename} to ${destPath}`);
+    console.log(`Downloaded ${link} to ${destPath}`);
     return true;
   } catch (error) {
     console.error(`Error downloading files: ${error.message}`);
@@ -55,12 +71,12 @@ async function check_directory(data_json_list) {
     // Loop through the list of data.json files
     for (let i = 0; i < data_json_list.length; i++) {
       // Get rid of slashes in the filename
-      const filename = data_json_list[i].replace(/\//g, '-');
+      const filename = remove_url_protocol(data_json_list[i]).replace(/:|\//g, "-");;
       const destPath = join(process.env.DOWNLOAD_DIRECTORY, filename);
 
       if (!existsSync(destPath)) {
-        console.log(`File ${data_json_list[i]} does not exist. Downloading...`);
-        const status = downloadFiles(data_json_list[i]);
+        console.log(`File ${remove_url_protocol(data_json_list[i])} does not exist. Downloading...`);
+        const status = await downloadFiles(data_json_list[i]);
         if (!status) {
           console.log(`Failed to download ${data_json_list[i]}`);
           return false;
@@ -86,7 +102,7 @@ async function parse_data_json(data_json_list) {
   var file_data = {};
 
   for (let i = 0; i < data_json_list.length; i++) {
-    const filename = data_json_list[i].replace(/\//g, '-');
+    const filename = remove_url_protocol(data_json_list[i]).replace(/:|\//g, "-");;
     const destPath = join(process.env.DOWNLOAD_DIRECTORY, filename);
     file_data[filename] = [];
 
@@ -115,7 +131,7 @@ async function parse_data_json(data_json_list) {
  */
 async function compare_fields(data_json_url, data_json, file_data) {
   // Compare the fields of the data.json files (title, description, landing page)
-  const filename = data_json_url.replace(/\//g, '-');
+  const filename = remove_url_protocol(data_json_url).replace(/:|\//g, "-");
   // Search for the filename in file_data
   if (file_data[filename]) {
     for (let i = 0; i < data_json.dataset.length; i++) {
@@ -159,7 +175,7 @@ async function compare_data(data_json_list, file_data) {
 }
 
 async function main() {
-  const data_json_list = ['http://opendata.vancouver.ca/data.json', "http://opendata.victoria.ca/data.json"];
+  const data_json_list = ['http://opendata.vancouver.ca/data.json', "https://opendata.victoria.ca/data.json"];
   const directory_exists = await check_directory(data_json_list);
   if (directory_exists) {
     const file_data = await parse_data_json(data_json_list);
