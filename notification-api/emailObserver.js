@@ -1,5 +1,4 @@
 const admin = require("firebase-admin")
-let adminEmails = [];
 let subscribers = {};
 
 try {
