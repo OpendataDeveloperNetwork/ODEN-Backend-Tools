@@ -174,6 +174,29 @@ const test_entries = [{
   }
 ]
 
+const test_entries_for_validator = [
+	{
+    "url": "https://opendata.vancouver.ca/explore/dataset/public-art/", // landing page
+    "labels": {
+      "category": "public-art",
+      "country": "Canada",
+      "region": "British Columbia",
+      "city": "Vancouver"
+    },
+    "data": {
+      "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
+      "datasets": {
+        "json": {
+          "url": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-art/exports/json?lang=en&timezone=America%2FLos_Angeles", // dataset", // dataset
+          "filters": {
+						"json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/british-columbia/vancouver/public-art-json-to-json.js"
+					}
+        }
+      }
+    }
+  }
+]
+
 // Fake filter return value
 // if errors is 0 then correctness is 100%
 const return_value_test_1 = {
@@ -299,27 +322,27 @@ const test_validate = async function () {
   validateFilter(filter, data, schema.data, std_lib)
 }
 
-const validateFilters = async (entries) => {
+const validateEntries = async (entries) => {
 
-	let std_lib_raw = await axios({
+	axios({
     url: "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/libraries/standard.js",
     method: 'GET',
     responseType: 'blob',
-  }).catch((err) => {
-    console.log(err)
-  })
-	
+  }).then(async res => {
+		try {
+			const stdLibFunc = Function(res.data)()
 
-
-	const std_lib_func = new Function(std_lib_raw.data)();
-
-	for (const entry of entries) {
-		const [filter, data, schema] = await parseEntry(entry)
-		if (filter && data && schema) {
-			const filter_func = new Function(filter)();
-			// validateFilter(filter_func, data, schema.data, std_lib_func)
+			for (const entry of entries) {
+				const {filter: [filterKey, filter] = [], dataset: [datasetKey, dataset] = [], schema} = await parseEntry(entry)
+				const filterFunc = Function(filter)()
+				validateFilter(filterFunc, dataset, schema, stdLibFunc)
+			}
+		} catch (err) {
+			console.log(err)
 		}
-	}
+	}).catch(err => {
+    console.log("Error fetching standard library.")
+  })
 }
 
 const parseEntry = async (entry) => {
@@ -331,7 +354,7 @@ const parseEntry = async (entry) => {
 		schema = await fetchUrlData(schemaUrl, "schema")
 	} catch (err) {
 		console.log("Schema url invalid for: " + entry.url + "\n")
-		return []
+		return {}
 	}
 
 	const datasets = entry.data.datasets || {}
@@ -339,7 +362,7 @@ const parseEntry = async (entry) => {
 	if (Object.keys(datasets).length == 0)
 		console.log("No datasets for: " + entry.url + "\n")
 
-	for (const [type, datasetObj] of Object.entries(datasets)) {
+	for (const [datasetKey, datasetObj] of Object.entries(datasets)) {
 		const datasetUrl = datasetObj.url || {};
 
 		let dataset
@@ -356,9 +379,9 @@ const parseEntry = async (entry) => {
 			console.log("No filter for: " + entry.url + "\n")
 
 
-		for (const [type, url] of Object.entries(filters)) {
-
+		for (const [filterKey, url] of Object.entries(filters)) {
 			let filter
+
 			try {
 				filter = await fetchUrlData(url, "filter")
 			} catch (err) {
@@ -367,11 +390,15 @@ const parseEntry = async (entry) => {
 			}
 			console.log("VALID ENTRY: " + entry.url + "\n")
 
-			return [filter, data, schema]
+			return {
+				'filter': [filterKey, filter],
+				'dataset': [datasetKey, dataset],
+				'schema': schema
+			}
 		}
 	}
 
-	return []
+	return {}
 }
 
 
@@ -394,16 +421,11 @@ const fetchUrlData = async (urlParam, type) => {
   return res.data
 }
 
-const validateFilter = (filter, data, schema, std_lib) => {
+const validateFilter = (filter, data, schema, stdLib) => {
   const v = new validator();
 
   try {
-    let my_new_data = filter(data, std_lib, {
-      stringify: false,
-      skip_errors: false,
-      schema: schema,
-      validator: v
-    });
+    let my_new_data = filter(data, stdLib, schema, v, false);
     console.log(my_new_data);
   } catch (err) {
     console.log(err);
@@ -411,4 +433,4 @@ const validateFilter = (filter, data, schema, std_lib) => {
 }
 
 // test_validate();
-validateFilters(test_entries)
+validateEntries(test_entries_for_validator)
