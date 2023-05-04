@@ -295,31 +295,6 @@ const test_entries_for_validator = [{
 //   ]
 // }
 
-const test_validate = async function () {
-  let schema = await axios({
-    url: "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/main/schemas/public-art.json",
-    method: 'GET',
-    responseType: 'blob',
-  }).catch((err) => {
-    console.log(err)
-  })
-
-  let std_lib_raw = await axios({
-    url: "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/libraries/standard.js",
-    method: 'GET',
-    responseType: 'blob',
-  }).catch((err) => {
-    console.log(err)
-  })
-
-  const std_lib = new Function(std_lib_raw.data)();
-
-  const filter = new Function(filter_blob)();
-
-
-  validateFilter(filter, data, schema.data, std_lib)
-}
-
 const validateEntries = async (entries) => {
 
   axios({
@@ -327,34 +302,32 @@ const validateEntries = async (entries) => {
     method: 'GET',
     responseType: 'blob',
   }).then(async res => {
-    try {
-      const stdLibFunc = Function(res.data)()
+		try {
+			const stdLibFunc = Function(res.data)()
 
-      for (const entry of entries) {
-        const {
-          filter: [filterKey, filter] = [],
-          dataset: [datasetKey, dataset] = [],
-          schema
-        } = await parseEntry(entry)
-        const filterFunc = Function(filter)()
-        const correctness = validateFilter(filterFunc, dataset, schema, stdLibFunc)
+			for (const entry of entries) {
+				const {
+					filter: [filterKey, filter] = [], 
+					dataset: [datasetKey, dataset] = [], 
+					schema
+				} = await parseEntry(entry)
+				const filterFunc = Function(filter)()
+				const [conformSchema, correctness] = validateFilter(filterFunc, dataset, schema, stdLibFunc) || []
 
-        if (correctness !== undefined) {
-          console.log("Correctness is: " + correctness)
-        } else {
-          console.log("Correctness is undefined")
-        }
+				if (conformSchema !== undefined) {
+					console.log("conformSchema ", conformSchema)
+					console.log("correctness ", correctness)
+				} else {
+					console.log("No validation result.")
+				}
+				
+				console.log('')
 
-
-
-        console.log("")
-
-
-      }
-    } catch (err) {
-      console.log(err)
-    }
-  }).catch(err => {
+			}
+		} catch (err) {
+			console.log(err)
+		}
+	}).catch(err => {
     console.log("Error fetching standard library.")
   })
 }
@@ -439,13 +412,15 @@ const validateFilter = (filter, dataset, schema, stdLib) => {
   const v = new validator();
 
   try {
-    const {
-      data = [], errors = []
-    } = filter(dataset, stdLib, schema, v, false) || {}
-
-    if (errors.length > 0) {
-      return data.length / (data.length + errors.length)
-    }
+		const {
+			data = [], errors = []
+		} = filter(dataset, stdLib, schema, v, false) || {}
+		
+		if (errors.length > 0) {
+			const conformSchema = !errors.some(error => error.type === 'validation')
+			const correctness = data.length / (data.length + errors.length)
+			return [conformSchema, correctness]
+		}
   } catch (err) {
     console.log("Filter is invalid with the following error:\n" + err)
   }
