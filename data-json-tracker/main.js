@@ -82,8 +82,6 @@ async function check_directory(data_json_list) {
  */
 async function parse_data_json(data_json_list) {
   // Ensure the data.json conforms to the us standards, and has the right type
-  const us_standard = 'https://project-open-data.cio.gov/v1.1/schema';
-  const type = 'dcat:Catalog';
   // Extract the titles and put them in file_data, key=filename, value=title
   var file_data = {};
 
@@ -94,7 +92,7 @@ async function parse_data_json(data_json_list) {
 
     const data = JSON.parse(readFileSync(destPath, 'utf8'));
 
-    if (data.conformsTo === us_standard && data["@type"] === type) {
+    if (data.conformsTo === process.env.US_STANDARED && data["@type"] === process.env.TYPE) {
       console.log(`${filename} conforms to the US standard and has the right type`);
       for (let j = 0; j < data.dataset.length; j++) {
         file_data[filename].push({
@@ -109,13 +107,19 @@ async function parse_data_json(data_json_list) {
   return file_data;
 }
 
-
+/**
+ * Compares the fields of the data.json files (title, description, landing page)
+ * @param {string} data_json_url URL to the data.json file
+ * @param {string} data_json Data from the data.json file
+ * @param {string} file_data Data from the cached data.json files
+ */
 async function compare_fields(data_json_url, data_json, file_data) {
   // Compare the fields of the data.json files (title, description, landing page)
   const filename = data_json_url.replace(/\//g, '-');
   // Search for the filename in file_data
   if (file_data[filename]) {
     for (let i = 0; i < data_json.dataset.length; i++) {
+      // TODO make sure the datasets @type is dcat:Dataset
       // Search for the title in the file_data
       const title = data_json.dataset[i].title;
       const index = file_data[filename].findIndex(x => x.title === title);
@@ -136,11 +140,20 @@ async function compare_fields(data_json_url, data_json, file_data) {
   }
 }
 
+/**
+ * Compares the data.json files to the cached data.json files
+ * @param {string} data_json_list List of all the data.json files
+ * @param {string} file_data Data from the cached data.json files
+ */
 async function compare_data(data_json_list, file_data) {
   // Loop through the list of data.json files, fetch the data, and then compare
   for (let i = 0; i < data_json_list.length; i++) {
     fetch(data_json_list[i]).then(response => response.json()).then(data => {
-      compare_fields(data_json_list[i], data, file_data);
+      if (data.conformsTo === process.env.US_STANDARED && data["@type"] === process.env.TYPE) {
+        compare_fields(data_json_list[i], data, file_data);
+      } else {
+        console.log(`${data_json_list[i]} does not conform to the US standard and has the right type`);
+      }
     }).catch(error => console.log(error));
   }
 }
