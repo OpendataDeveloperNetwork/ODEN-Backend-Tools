@@ -197,103 +197,103 @@ const test_entries_for_validator = [{
 
 // Fake filter return value
 // if errors is 0 then correctness is 100%
-const return_value_test_1 = {
-  data: [{
-      name: "x",
-      coordinates: [{
-        "X": 0
-      }, {
-        "Y": 0
-      }]
-    },
-    {
-      name: "re",
-      coordinates: [{
-        "X": 12
-      }, {
-        "Y": 133
-      }]
-    },
-    {
-      name: "3",
-      coordinates: [{
-        "X": 2
-      }, {
-        "Y": 3
-      }]
-    }
-  ],
-  errors: []
-}
+// const return_value_test_1 = {
+//   data: [{
+//       name: "x",
+//       coordinates: [{
+//         "X": 0
+//       }, {
+//         "Y": 0
+//       }]
+//     },
+//     {
+//       name: "re",
+//       coordinates: [{
+//         "X": 12
+//       }, {
+//         "Y": 133
+//       }]
+//     },
+//     {
+//       name: "3",
+//       coordinates: [{
+//         "X": 2
+//       }, {
+//         "Y": 3
+//       }]
+//     }
+//   ],
+//   errors: []
+// }
 
-// Should calculate the correctness value of this as data / errors
-const return_value_test_2 = {
-  data: [{
-      name: "x",
-      coordinates: [{
-        "X": 0
-      }, {
-        "Y": 0
-      }]
-    },
-    {
-      name: "re",
-      coordinates: [{
-        "X": 12
-      }, {
-        "Y": 133
-      }]
-    }
-  ],
-  errors: [{
-    type: 'missing-field',
-    missing_field: 'name',
-    data_entry: {
-      coordinates: [{
-        "X": 12
-      }, {
-        "Y": 133
-      }]
-    }
-  }]
-}
-// conforms to schema fails, and calculate the correctness value
-const return_value_test_3 = {
-  data: [{
-      name: "x",
-      coordinates: [{
-        "X": 0
-      }, {
-        "Y": 0
-      }]
-    },
-    {
-      name: "re",
-      coordinates: [{
-        "X": 12
-      }, {
-        "Y": 133
-      }]
-    }
-  ],
-  errors: [{
-      type: 'missing-field',
-      missing_field: 'name',
-      data_entry: {
-        coordinates: [{
-          "X": 12
-        }, {
-          "Y": 133
-        }]
-      }
-    },
-    {
-      type: 'validation',
-      validation_result: {},
-      data_entry: {}
-    }
-  ]
-}
+// // Should calculate the correctness value of this as data / errors
+// const return_value_test_2 = {
+//   data: [{
+//       name: "x",
+//       coordinates: [{
+//         "X": 0
+//       }, {
+//         "Y": 0
+//       }]
+//     },
+//     {
+//       name: "re",
+//       coordinates: [{
+//         "X": 12
+//       }, {
+//         "Y": 133
+//       }]
+//     }
+//   ],
+//   errors: [{
+//     type: 'missing-field',
+//     missing_field: 'name',
+//     data_entry: {
+//       coordinates: [{
+//         "X": 12
+//       }, {
+//         "Y": 133
+//       }]
+//     }
+//   }]
+// }
+// // conforms to schema fails, and calculate the correctness value
+// const return_value_test_3 = {
+//   data: [{
+//       name: "x",
+//       coordinates: [{
+//         "X": 0
+//       }, {
+//         "Y": 0
+//       }]
+//     },
+//     {
+//       name: "re",
+//       coordinates: [{
+//         "X": 12
+//       }, {
+//         "Y": 133
+//       }]
+//     }
+//   ],
+//   errors: [{
+//       type: 'missing-field',
+//       missing_field: 'name',
+//       data_entry: {
+//         coordinates: [{
+//           "X": 12
+//         }, {
+//           "Y": 133
+//         }]
+//       }
+//     },
+//     {
+//       type: 'validation',
+//       validation_result: {},
+//       data_entry: {}
+//     }
+//   ]
+// }
 
 const test_validate = async function () {
   let schema = await axios({
@@ -451,5 +451,26 @@ const validateFilter = (filter, dataset, schema, stdLib) => {
   }
 }
 
-// test_validate();
+const get_entries = async () => {
+  url = "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Client/main/data.json";
+  const res = await axios({
+    url: url,
+    method: 'GET',
+    responseType: 'json',
+  })
+  result = res.data
+  return result
+}
+
+// Data from data.json file in client
+// const entries_from_data_json = null
+// get_entries()
+//   .then((entries_from_data_json) => {
+//     validateEntries(entries_from_data_json)
+//   })
+//   .catch((error) => {
+//     console.error(error);
+//   });
+
+// Data from hardcoded test entries
 validateEntries(test_entries)
