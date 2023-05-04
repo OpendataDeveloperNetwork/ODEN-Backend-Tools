@@ -319,7 +319,7 @@ const test_validate = async function () {
   const filter = new Function(filter_blob)();
 
 
-  validateFilter(filter, data, schema.data, std_lib)
+	validateFilter(filter, data, schema.data, std_lib)
 }
 
 const validateEntries = async (entries) => {
@@ -335,7 +335,11 @@ const validateEntries = async (entries) => {
 			for (const entry of entries) {
 				const {filter: [filterKey, filter] = [], dataset: [datasetKey, dataset] = [], schema} = await parseEntry(entry)
 				const filterFunc = Function(filter)()
-				validateFilter(filterFunc, dataset, schema, stdLibFunc)
+				const correctness = validateFilter(filterFunc, dataset, schema, stdLibFunc)
+
+				if (correctness !== undefined) {
+					console.log(correctness)
+				}
 			}
 		} catch (err) {
 			console.log(err)
@@ -421,14 +425,17 @@ const fetchUrlData = async (urlParam, type) => {
   return res.data
 }
 
-const validateFilter = (filter, data, schema, stdLib) => {
+const validateFilter = (filter, dataset, schema, stdLib) => {
   const v = new validator();
 
   try {
-    let my_new_data = filter(data, stdLib, schema, v, false);
-    console.log(my_new_data);
+		const {data = [], errors = []} = filter(dataset, stdLib, schema, v, false) || {}
+		
+		if (errors.length > 0) {
+			return data.length / (data.length + errors.length)
+		}
   } catch (err) {
-    console.log(err);
+    console.log(err)
   }
 }
 
