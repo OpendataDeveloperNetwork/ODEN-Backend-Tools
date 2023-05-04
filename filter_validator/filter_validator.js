@@ -299,66 +299,97 @@ const test_validate = async function () {
   validateFilter(filter, data, schema.data, std_lib)
 }
 
-const parseEntries = async () => {
+const validateFilters = async (entries) => {
 
-  for (const entry of test_entries) {
-    const schemaUrl = entry.data?.schema
-
-    let schema
-    try {
-      schema = await fetchUrlData(schemaUrl)
-    } catch (err) {
-      console.log("Schema url invalid for: " + entry.url + "\n")
-      continue
-    }
-
-    const datasets = entry.data.datasets || {}
-
-    if (Object.keys(datasets).length == 0)
-      console.log("No datasets for: " + entry.url + "\n")
-
-    for (const [type, datasetObj] of Object.entries(datasets)) {
-      const datasetUrl = datasetObj.url || {};
-
-      let dataset
-      try {
-        dataset = await fetchUrlData(datasetUrl)
-      } catch (err) {
-        console.log("Dataset url invalid for: " + entry.url + "\n")
-        continue
-      }
-
-      const filters = datasetObj.filters || {};
-
-      if (Object.keys(filters).length == 0)
-        console.log("No filter for: " + entry.url + "\n")
+	let std_lib_raw = await axios({
+    url: "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/libraries/standard.js",
+    method: 'GET',
+    responseType: 'blob',
+  }).catch((err) => {
+    console.log(err)
+  })
+	
 
 
-      for (const [type, url] of Object.entries(filters)) {
+	const std_lib_func = new Function(std_lib_raw.data)();
 
-        let filter
-        try {
-          filter = await fetchUrlData(url)
-        } catch (err) {
-          console.log("Filter url invalid for: " + entry.url + "\n")
-          continue
-        }
-        console.log("VALID ENTRY: " + entry.url + "\n")
+	for (const entry of entries) {
+		const [filter, data, schema] = await parseEntry(entry)
+		if (filter && data && schema) {
+			const filter_func = new Function(filter)();
+			// validateFilter(filter_func, data, schema.data, std_lib_func)
+		}
+	}
+}
 
-        // validateFilter(filter, dataset, schema, std_lib)
-      }
-    }
-  }
+const parseEntry = async (entry) => {
+
+	const schemaUrl = entry.data?.schema
+
+	let schema
+	try {
+		schema = await fetchUrlData(schemaUrl, "schema")
+	} catch (err) {
+		console.log("Schema url invalid for: " + entry.url + "\n")
+		return []
+	}
+
+	const datasets = entry.data.datasets || {}
+
+	if (Object.keys(datasets).length == 0)
+		console.log("No datasets for: " + entry.url + "\n")
+
+	for (const [type, datasetObj] of Object.entries(datasets)) {
+		const datasetUrl = datasetObj.url || {};
+
+		let dataset
+		try {
+			dataset = await fetchUrlData(datasetUrl, "dataset")
+		} catch (err) {
+			console.log("Dataset url invalid for: " + entry.url + "\n")
+			continue
+		}
+
+		const filters = datasetObj.filters || {};
+
+		if (Object.keys(filters).length == 0)
+			console.log("No filter for: " + entry.url + "\n")
+
+
+		for (const [type, url] of Object.entries(filters)) {
+
+			let filter
+			try {
+				filter = await fetchUrlData(url, "filter")
+			} catch (err) {
+				console.log("Filter url invalid for: " + entry.url + "\n")
+				continue
+			}
+			console.log("VALID ENTRY: " + entry.url + "\n")
+
+			return [filter, data, schema]
+		}
+	}
+
+	return []
 }
 
 
-const fetchUrlData = async (urlParam) => {
+
+
+const fetchUrlData = async (urlParam, type) => {
 
   const res = await axios({
     url: urlParam,
     method: 'GET',
     responseType: 'blob',
   })
+
+  if (["schema", "dataset"].includes(type) && !(res.headers.get("Content-Type").includes('application/json') || urlParam.endsWith(".json"))) {
+			throw Error
+  } else if (type == "filter" && !(res.headers.get("Content-Type").includes('text/plain') || urlParam.endsWith(".js"))) {
+			throw Error
+	}
 
   return res.data
 }
@@ -380,4 +411,4 @@ const validateFilter = (filter, data, schema, std_lib) => {
 }
 
 // test_validate();
-parseEntries();
+validateFilters(test_entries)
