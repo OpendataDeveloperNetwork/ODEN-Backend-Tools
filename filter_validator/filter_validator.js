@@ -306,7 +306,7 @@ const parseEntries = async () => {
 
     let schema
     try {
-      schema = await fetchUrl(schemaUrl)
+      schema = await fetchUrlData(schemaUrl)
     } catch (err) {
       console.log("Schema url invalid for: " + entry.url + "\n")
       continue
@@ -322,7 +322,7 @@ const parseEntries = async () => {
 
       let dataset
       try {
-        dataset = await fetchUrl(datasetUrl)
+        dataset = await fetchUrlData(datasetUrl)
       } catch (err) {
         console.log("Dataset url invalid for: " + entry.url + "\n")
         continue
@@ -338,34 +338,29 @@ const parseEntries = async () => {
 
         let filter
         try {
-          filter = await fetchUrl(url)
+          filter = await fetchUrlData(url)
         } catch (err) {
           console.log("Filter url invalid for: " + entry.url + "\n")
           continue
         }
         console.log("VALID ENTRY: " + entry.url + "\n")
 
-
         // validateFilter(filter, dataset, schema, std_lib)
       }
-
-
-
     }
   }
 }
 
 
-const fetchUrl = async (urlParam) => {
+const fetchUrlData = async (urlParam) => {
 
-  const data = await axios({
+  const res = await axios({
     url: urlParam,
     method: 'GET',
     responseType: 'blob',
   })
 
-  return data
-
+  return res.data
 }
 
 const validateFilter = (filter, data, schema, std_lib) => {
