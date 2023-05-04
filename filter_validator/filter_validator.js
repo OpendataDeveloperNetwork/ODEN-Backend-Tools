@@ -174,185 +174,224 @@ const test_entries = [{
   }
 ]
 
-// Fake filter return value
-// if errors is 0 then correctness is 100%
-const return_value_test_1 = {
-  data: [{
-      name: "x",
-      coordinates: [{
-        "X": 0
-      }, {
-        "Y": 0
-      }]
-    },
-    {
-      name: "re",
-      coordinates: [{
-        "X": 12
-      }, {
-        "Y": 133
-      }]
-    },
-    {
-      name: "3",
-      coordinates: [{
-        "X": 2
-      }, {
-        "Y": 3
-      }]
-    }
-  ],
-  errors: []
-}
-
-// Should calculate the correctness value of this as data / errors
-const return_value_test_2 = {
-  data: [{
-      name: "x",
-      coordinates: [{
-        "X": 0
-      }, {
-        "Y": 0
-      }]
-    },
-    {
-      name: "re",
-      coordinates: [{
-        "X": 12
-      }, {
-        "Y": 133
-      }]
-    }
-  ],
-  errors: [{
-    type: 'missing-field',
-    missing_field: 'name',
-    data_entry: {
-      coordinates: [{
-        "X": 12
-      }, {
-        "Y": 133
-      }]
-    }
-  }]
-}
-// conforms to schema fails, and calculate the correctness value
-const return_value_test_3 = {
-  data: [{
-      name: "x",
-      coordinates: [{
-        "X": 0
-      }, {
-        "Y": 0
-      }]
-    },
-    {
-      name: "re",
-      coordinates: [{
-        "X": 12
-      }, {
-        "Y": 133
-      }]
-    }
-  ],
-  errors: [{
-      type: 'missing-field',
-      missing_field: 'name',
-      data_entry: {
-        coordinates: [{
-          "X": 12
-        }, {
-          "Y": 133
-        }]
-      }
-    },
-    {
-      type: 'validation',
-      validation_result: {},
-      data_entry: {}
-    }
-  ]
-}
-
-const test_validate = async function () {
-  let schema = await axios({
-    url: "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/main/schemas/public-art.json",
-    method: 'GET',
-    responseType: 'blob',
-  }).catch((err) => {
-    console.log(err)
-  })
-
-  let std_lib_raw = await axios({
-    url: "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/libraries/standard.js",
-    method: 'GET',
-    responseType: 'blob',
-  }).catch((err) => {
-    console.log(err)
-  })
-
-  const std_lib = new Function(std_lib_raw.data)();
-
-  const filter = new Function(filter_blob)();
-
-
-  validateFilter(filter, data, schema.data, std_lib)
-}
-
-const parseEntries = async () => {
-
-  for (const entry of test_entries) {
-    const schemaUrl = entry.data?.schema
-
-    let schema
-    try {
-      schema = await fetchUrlData(schemaUrl)
-    } catch (err) {
-      console.log("Schema url invalid for: " + entry.url + "\n")
-      continue
-    }
-
-    const datasets = entry.data.datasets || {}
-
-    if (Object.keys(datasets).length == 0)
-      console.log("No datasets for: " + entry.url + "\n")
-
-    for (const [type, datasetObj] of Object.entries(datasets)) {
-      const datasetUrl = datasetObj.url || {};
-
-      let dataset
-      try {
-        dataset = await fetchUrlData(datasetUrl)
-      } catch (err) {
-        console.log("Dataset url invalid for: " + entry.url + "\n")
-        continue
-      }
-
-      const filters = datasetObj.filters || {};
-
-      if (Object.keys(filters).length == 0)
-        console.log("No filter for: " + entry.url + "\n")
-
-
-      for (const [type, url] of Object.entries(filters)) {
-
-        let filter
-        try {
-          filter = await fetchUrlData(url)
-        } catch (err) {
-          console.log("Filter url invalid for: " + entry.url + "\n")
-          continue
+const test_entries_for_validator = [{
+  "url": "https://opendata.vancouver.ca/explore/dataset/public-art/", // landing page
+  "labels": {
+    "category": "public-art",
+    "country": "Canada",
+    "region": "British Columbia",
+    "city": "Vancouver"
+  },
+  "data": {
+    "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
+    "datasets": {
+      "json": {
+        "url": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-art/exports/json?lang=en&timezone=America%2FLos_Angeles", // dataset", // dataset
+        "filters": {
+          "json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/british-columbia/vancouver/public-art-json-to-json.js"
         }
-        console.log("VALID ENTRY: " + entry.url + "\n")
-
-        // validateFilter(filter, dataset, schema, std_lib)
       }
     }
   }
+}]
+
+// Fake filter return value
+// if errors is 0 then correctness is 100%
+// const return_value_test_1 = {
+//   data: [{
+//       name: "x",
+//       coordinates: [{
+//         "X": 0
+//       }, {
+//         "Y": 0
+//       }]
+//     },
+//     {
+//       name: "re",
+//       coordinates: [{
+//         "X": 12
+//       }, {
+//         "Y": 133
+//       }]
+//     },
+//     {
+//       name: "3",
+//       coordinates: [{
+//         "X": 2
+//       }, {
+//         "Y": 3
+//       }]
+//     }
+//   ],
+//   errors: []
+// }
+
+// // Should calculate the correctness value of this as data / errors
+// const return_value_test_2 = {
+//   data: [{
+//       name: "x",
+//       coordinates: [{
+//         "X": 0
+//       }, {
+//         "Y": 0
+//       }]
+//     },
+//     {
+//       name: "re",
+//       coordinates: [{
+//         "X": 12
+//       }, {
+//         "Y": 133
+//       }]
+//     }
+//   ],
+//   errors: [{
+//     type: 'missing-field',
+//     missing_field: 'name',
+//     data_entry: {
+//       coordinates: [{
+//         "X": 12
+//       }, {
+//         "Y": 133
+//       }]
+//     }
+//   }]
+// }
+// // conforms to schema fails, and calculate the correctness value
+// const return_value_test_3 = {
+//   data: [{
+//       name: "x",
+//       coordinates: [{
+//         "X": 0
+//       }, {
+//         "Y": 0
+//       }]
+//     },
+//     {
+//       name: "re",
+//       coordinates: [{
+//         "X": 12
+//       }, {
+//         "Y": 133
+//       }]
+//     }
+//   ],
+//   errors: [{
+//       type: 'missing-field',
+//       missing_field: 'name',
+//       data_entry: {
+//         coordinates: [{
+//           "X": 12
+//         }, {
+//           "Y": 133
+//         }]
+//       }
+//     },
+//     {
+//       type: 'validation',
+//       validation_result: {},
+//       data_entry: {}
+//     }
+//   ]
+// }
+
+const validateEntries = async (entries) => {
+
+  axios({
+    url: "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/libraries/standard.js",
+    method: 'GET',
+    responseType: 'blob',
+  }).then(async res => {
+		try {
+			const stdLibFunc = Function(res.data)()
+
+			for (const entry of entries) {
+				const {
+					filter: [filterKey, filter] = [], 
+					dataset: [datasetKey, dataset] = [], 
+					schema
+				} = await parseEntry(entry)
+				const filterFunc = Function(filter)()
+				const [conformSchema, correctness] = validateFilter(filterFunc, dataset, schema, stdLibFunc) || []
+
+				if (conformSchema !== undefined) {
+					console.log("conformSchema ", conformSchema)
+					console.log("correctness ", correctness)
+				} else {
+					console.log("No validation result.")
+				}
+				
+				console.log('')
+
+			}
+		} catch (err) {
+			console.log(err)
+		}
+	}).catch(err => {
+    console.log("Error fetching standard library.")
+  })
+}
+
+const parseEntry = async (entry) => {
+
+  const schemaUrl = entry.data.schema
+
+  let schema
+  try {
+    schema = await fetchUrlData(schemaUrl, "schema")
+  } catch (err) {
+    console.log("Schema url invalid for: " + entry.url)
+    return {}
+  }
+
+  const datasets = entry.data.datasets || {}
+
+  if (Object.keys(datasets).length == 0)
+    console.log("No datasets for: " + entry.url)
+
+  for (const [datasetKey, datasetObj] of Object.entries(datasets)) {
+    const datasetUrl = datasetObj.url || {};
+
+    let dataset
+    try {
+      dataset = await fetchUrlData(datasetUrl, "dataset")
+    } catch (err) {
+      console.log("Dataset url invalid for: " + entry.url)
+      continue
+    }
+
+    const filters = datasetObj.filters || {};
+
+    if (Object.keys(filters).length == 0)
+      console.log("No filter for: " + entry.url)
+
+
+    for (const [filterKey, url] of Object.entries(filters)) {
+      let filter
+
+      try {
+        filter = await fetchUrlData(url, "filter")
+      } catch (err) {
+        console.log("Filter url invalid for: " + entry.url)
+        continue
+      }
+      console.log("VALID ENTRY: " + entry.url)
+
+      return {
+        'filter': [filterKey, filter],
+        'dataset': [datasetKey, dataset],
+        'schema': schema
+      }
+    }
+  }
+
+  return {}
 }
 
 
-const fetchUrlData = async (urlParam) => {
+
+
+const fetchUrlData = async (urlParam, type) => {
 
   const res = await axios({
     url: urlParam,
@@ -360,24 +399,53 @@ const fetchUrlData = async (urlParam) => {
     responseType: 'blob',
   })
 
+  if (["schema", "dataset"].includes(type) && !(res.headers.get("Content-Type").includes('application/json') || urlParam.endsWith(".json"))) {
+    throw Error
+  } else if (type == "filter" && !(res.headers.get("Content-Type").includes('text/plain') || urlParam.endsWith(".js"))) {
+    throw Error
+  }
+
   return res.data
 }
 
-const validateFilter = (filter, data, schema, std_lib) => {
+const validateFilter = (filter, dataset, schema, stdLib) => {
   const v = new validator();
 
   try {
-    let my_new_data = filter(data, std_lib, {
-      stringify: false,
-      skip_errors: false,
-      schema: schema,
-      validator: v
-    });
-    console.log(my_new_data);
+		const {
+			data = [], errors = []
+		} = filter(dataset, stdLib, schema, v, false) || {}
+		
+		if (errors.length > 0) {
+			const conformSchema = !errors.some(error => error.type === 'validation')
+			const correctness = data.length / (data.length + errors.length)
+			return [conformSchema, correctness]
+		}
   } catch (err) {
-    console.log(err);
+    console.log("Filter is invalid with the following error:\n" + err)
   }
 }
 
-// test_validate();
-parseEntries();
+const get_entries = async () => {
+  url = "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Client/main/data.json";
+  const res = await axios({
+    url: url,
+    method: 'GET',
+    responseType: 'json',
+  })
+  result = res.data
+  return result
+}
+
+// Data from data.json file in client
+// const entries_from_data_json = null
+// get_entries()
+//   .then((entries_from_data_json) => {
+//     validateEntries(entries_from_data_json)
+//   })
+//   .catch((error) => {
+//     console.error(error);
+//   });
+
+// Data from hardcoded test entries
+validateEntries(test_entries)
