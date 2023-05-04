@@ -11,6 +11,7 @@ try {
 }
 
 const db = admin.firestore();
+const FieldValue = admin.firestore.FieldValue;
 const notificationApiSubscriberRef = db.collection('notification-api').doc('subscribers');
 
 /**
@@ -38,7 +39,21 @@ function getSubscribers() {
     return subscribers;
 }
 
+function addObservers(email, categories) {
+    console.log("Running addObservers...")
+    categories.forEach(async category => {
+        const unionRes = await notificationApiSubscriberRef.update({
+            [category]: FieldValue.arrayUnion(email)
+        }).then(() => {
+            console.log(`${email} has been successfully added to ${category}.`);
+        }).catch((error) => {
+            console.error(`Error: Unable to add ${email} to ${category}`, error);
+        });
+    });
+}
+
 module.exports = {
     getSubscribers,
+    addObservers,
     subscriberObserver
 };
