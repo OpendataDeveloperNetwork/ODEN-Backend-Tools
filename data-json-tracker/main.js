@@ -174,6 +174,8 @@ async function compare_data(data_json_list, file_data) {
   }
 }
 
+// For future the filter will be using the transmogrifier
+
 async function main() {
   const data_json_list = ['http://opendata.vancouver.ca/data.json', "https://opendata.victoria.ca/data.json"];
   const directory_exists = await check_directory(data_json_list);
