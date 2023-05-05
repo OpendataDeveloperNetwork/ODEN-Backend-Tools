@@ -357,8 +357,8 @@ const validateEntries = async (entries) => {
 
 				if (conformSchema !== undefined) {
 					const schemaObj = result[url] = result[url] || { conformSchema: true }
-					result[url][datasetKey] = result[url][datasetKey] || {}
-					const filterObj = result[url][datasetKey][filterKey] = result[url][datasetKey][filterKey] || {}
+					const datasetObj = schemaObj[datasetKey] = schemaObj[datasetKey] || {}
+					const filterObj = datasetObj[filterKey] = datasetObj[filterKey] || {}
 
 					schemaObj.conformSchema = !schemaObj.conformSchema || conformSchema
 					filterObj.correctness = correctness
