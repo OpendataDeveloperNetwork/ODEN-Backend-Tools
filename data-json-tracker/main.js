@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, createWriteStream, readFileSync } from 'fs';
 import { basename, join } from 'path';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -12,7 +13,7 @@ dotenv.config();
  */
 function remove_url_protocol(url) {
   // check if the url passed in is an array
-  if (Array.isArray(url)) { 
+  if (Array.isArray(url)) {
     const urlsWithoutProtocol = url.map((url) => {
       return url.replace(/^https?:\/\//i, '');
     });
@@ -129,11 +130,15 @@ async function parse_data_json(data_json_list) {
  * @param {string} data_json Data from the data.json file
  * @param {string} file_data Data from the cached data.json files
  */
-async function compare_fields(data_json_url, data_json, file_data) {
+async function compare_fields(data_json_url, data_json, file_data, changes) {
   // Compare the fields of the data.json files (title, description, landing page)
   const filename = remove_url_protocol(data_json_url).replace(/:|\//g, "-");
   // Search for the filename in file_data
   if (file_data[filename]) {
+    if (!changes[filename]) {
+      changes[filename] = [];
+    }
+
     for (let i = 0; i < data_json.dataset.length; i++) {
       // TODO make sure the datasets @type is dcat:Dataset
       // Search for the title in the file_data
@@ -142,13 +147,13 @@ async function compare_fields(data_json_url, data_json, file_data) {
       if (index !== -1) {
         // Compare the description and landing page
         if (data_json.dataset[i].description !== file_data[filename][index].description) {
-          console.log(`Description for ${title} does not match`);
+          changes[filename].push({ title: title, description: data_json.dataset[i].description });
         }
         if (data_json.dataset[i].landingPage !== file_data[filename][index].landingPage) {
-          console.log(`Landing page for ${title} does not match`);
+          changes[filename].push({ title: title, landingPage: data_json.dataset[i].landingPage });
         }
       } else {
-        console.log(`Title ${title} does not exist in ${filename}`);
+        changes[filename].push({ title: title, missing: true });
       }
     }
   } else {
@@ -156,21 +161,48 @@ async function compare_fields(data_json_url, data_json, file_data) {
   }
 }
 
+
 /**
  * Compares the data.json files to the cached data.json files
  * @param {string} data_json_list List of all the data.json files
  * @param {string} file_data Data from the cached data.json files
  */
 async function compare_data(data_json_list, file_data) {
+  var changes = {};
   // Loop through the list of data.json files, fetch the data, and then compare
-  for (let i = 0; i < data_json_list.length; i++) {
-    fetch(data_json_list[i]).then(response => response.json()).then(data => {
+  await Promise.all(data_json_list.map(async (data_json_url) => {
+    try {
+      const response = await fetch(data_json_url);
+      const data = await response.json();
       if (data.conformsTo === process.env.US_STANDARED && data["@type"] === process.env.TYPE) {
-        compare_fields(data_json_list[i], data, file_data);
+        await compare_fields(data_json_url, data, file_data, changes);
       } else {
-        console.log(`${data_json_list[i]} does not conform to the US standard and has the right type`);
+        console.log(`${data_json_url} does not conform to the US standard and has the right type`);
       }
-    }).catch(error => console.log(error));
+    } catch (error) {
+      console.log(error);
+    }
+  }));
+  return changes;
+}
+
+/**
+ * Logs the changes to the log.txt file
+ * @param {JSON} changes JSON object with the filename as the key and the title, description, and landing page as the value
+ * @returns {void}
+*/
+async function log_changes(changes) {
+  const timestamp = new Date().toISOString();
+  const changesArray = Object.entries(changes).filter(([key, value]) => value.length > 0);
+  if (changesArray.length > 0) {
+    const log = {
+      timestamp,
+      changes: changesArray.reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {})
+    };
+    fs.appendFile('log.txt', JSON.stringify(log) + '\n', (err) => {
+      if (err) throw err;
+      console.log('Changes logged to log.txt');
+    });
   }
 }
 
@@ -181,7 +213,8 @@ async function main() {
   const directory_exists = await check_directory(data_json_list);
   if (directory_exists) {
     const file_data = await parse_data_json(data_json_list);
-    await compare_data(data_json_list, file_data);
+    const changes = await compare_data(data_json_list, file_data);
+    await log_changes(changes)
   }
 }
 
