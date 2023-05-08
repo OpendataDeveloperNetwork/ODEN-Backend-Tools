@@ -4,6 +4,8 @@ const {
 
 const validator = require('jsonschema').Validator;
 
+const updateFile = require('./update_github').updateFile
+
 const filter_blob = `const filter = function (data, std_lib, params) {
   // check for standard library and pull out required functions
   if (!std_lib) {
@@ -295,6 +297,11 @@ const test_entries_for_validator = [{
 //   ]
 // }
 
+const test_update = async (test_entries) => {
+	const validation = await validateEntries(test_entries)
+  if (validation)
+	  updateFile(validation)
+}
 
 const validateEntries = async (entries) => {
 
@@ -356,9 +363,9 @@ const validateEntries = async (entries) => {
 				] = validateFilter(filterFunc, dataset, schema, stdLibFunc) || []
 
 				if (conformSchema !== undefined) {
-					const schemaObj = result[url] = result[url] || { conformSchema: true }
-					const datasetObj = schemaObj[datasetKey] = schemaObj[datasetKey] || {}
-					const filterObj = datasetObj[filterKey] = datasetObj[filterKey] || {}
+					const schemaObj = result[url] = result[url] || { conformSchema: true, datasets: {}}
+					const datasetObj = schemaObj.datasets[datasetKey] = schemaObj.datasets[datasetKey] || { filters: {}}
+					const filterObj = datasetObj.filters[filterKey] = datasetObj.filters[filterKey] || {}
 
 					schemaObj.conformSchema = !schemaObj.conformSchema || conformSchema
 					filterObj.correctness = correctness
@@ -370,7 +377,7 @@ const validateEntries = async (entries) => {
 			}
 		}
 	}
-	console.log(result)
+	return result
 }
 
 const fetchUrlData = async (urlParam, type) => {
@@ -441,5 +448,5 @@ const get_std_lib_func = async () => {
 //   });
 
 // Data from hardcoded test entries
-validateEntries(test_entries)
-// updateMetaData()
+// validateEntries(test_entries)
+test_update(test_entries)
