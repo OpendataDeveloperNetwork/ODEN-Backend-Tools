@@ -17,7 +17,7 @@ const test_data = require('./test_data.js').test_entries
 
 const test_update = async (test_entries) => {
   get_entries().then(async entries => {
-    const validation = await validateEntries(test_entries)
+    const validation = await validateEntries(entries)
     if (validation)
       updateFile(validation)
   })
@@ -114,7 +114,7 @@ const fetchUrlData = async (urlParam, type) => {
     responseType: 'blob',
   })
 
-  if (["schema", "dataset"].includes(type) && !(res.headers.get("Content-Type").includes('application/json') || urlParam.endsWith(".json"))) {
+  if (["schema", "dataset"].includes(type) && !(res.headers.get("Content-Type").includes('application/json') || urlParam.endsWith("json"))) {
     throw Error
   } else if (type == "filter" && !(res.headers.get("Content-Type").includes('text/plain') || urlParam.endsWith(".js"))) {
     throw Error
@@ -138,7 +138,7 @@ const validateFilter = (filter, dataset, schema, stdLib) => {
       return [conformSchema, correctness]
     }
   } catch (err) {
-    console.log("Filter is invalid with the following error:\n" + err)
+    console.log("Filter is invalid with the following error: " + err)
   }
 }
 
