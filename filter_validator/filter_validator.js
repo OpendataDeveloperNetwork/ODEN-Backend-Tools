@@ -1,6 +1,9 @@
 const {
   default: axios
 } = require("axios");
+import dotenv from 'dotenv';
+
+dotenv.config(); // For the .env file
 
 const validator = require('jsonschema').Validator;
 
@@ -104,76 +107,76 @@ const data = `[{"registryid": 8, "title_of_work": "", "artistprojectstatement": 
 // TODO: Loop through each object and ensure the schema, dataset, and filter fields exist (log if they do or dont)
 // TODO: Fetch the schema, filter, and data from the urls, and ensure they are valid (check to make sure the dataset is json or not ...)
 const test_entries = [{
-    "url": "https://data.calgary.ca/d/2kp2-hsy7", // landing page
-    "labels": {
-      "category": "public-art",
-      "country": "Canada",
-      "region": "Alberta",
-      "city": "Calgary"
-    },
-    "data": {
-      "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
-      "datasets": {
-        "json": {
-          "url": "https://data.calgary.ca/resource/2kp2-hsy7.json", // dataset
-          "filters": {
-            "json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/alberta/calgary/public-art-json-to-json.js" // filter
-          }
-        }
-      }
-    }
+  "url": "https://data.calgary.ca/d/2kp2-hsy7", // landing page
+  "labels": {
+    "category": "public-art",
+    "country": "Canada",
+    "region": "Alberta",
+    "city": "Calgary"
   },
-  {
-    "url": "http://opendata-saskatoon.cloudapp.net/",
-    "labels": {
-      "category": "",
-      "country": "Canada",
-      "region": "Saskatchewan",
-      "city": "Saskatoon"
-    },
-    "data": {
-      "schema": "",
-      "datasets": {}
-    }
-  },
-  {
-    "url": "https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art", // landing page
-    "labels": {
-      "category": "public-art",
-      "country": "Canada",
-      "region": "British Columbia",
-      "city": "Prince George"
-    },
-    "data": {
-      "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
-      "datasets": {
-        "geojson": {
-          "url": "https://services2.arcgis.com/CnkB6jCzAsyli34z/arcgis/rest/services/OpenData_Parks/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson", // dataset
-          "filters": {
-            "json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/british-columbia/prince-george/public-art-geojson-to-json.js" // filter
-          }
-        }
-      }
-    }
-  },
-  {
-    "url": "https://opendata.vancouver.ca/explore/dataset/public-art/", // landing page
-    "labels": {
-      "category": "public-art",
-      "country": "Canada",
-      "region": "British Columbia",
-      "city": "Vancouver"
-    },
-    "data": {
-      "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
-      "datasets": {
-        "json": {
-          "url": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-art/exports/json?lang=en&timezone=America%2FLos_Angeles", // dataset", // dataset
-          "filters": {}
+  "data": {
+    "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
+    "datasets": {
+      "json": {
+        "url": "https://data.calgary.ca/resource/2kp2-hsy7.json", // dataset
+        "filters": {
+          "json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/alberta/calgary/public-art-json-to-json.js" // filter
         }
       }
     }
   }
+},
+{
+  "url": "http://opendata-saskatoon.cloudapp.net/",
+  "labels": {
+    "category": "",
+    "country": "Canada",
+    "region": "Saskatchewan",
+    "city": "Saskatoon"
+  },
+  "data": {
+    "schema": "",
+    "datasets": {}
+  }
+},
+{
+  "url": "https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art", // landing page
+  "labels": {
+    "category": "public-art",
+    "country": "Canada",
+    "region": "British Columbia",
+    "city": "Prince George"
+  },
+  "data": {
+    "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
+    "datasets": {
+      "geojson": {
+        "url": "https://services2.arcgis.com/CnkB6jCzAsyli34z/arcgis/rest/services/OpenData_Parks/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson", // dataset
+        "filters": {
+          "json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/british-columbia/prince-george/public-art-geojson-to-json.js" // filter
+        }
+      }
+    }
+  }
+},
+{
+  "url": "https://opendata.vancouver.ca/explore/dataset/public-art/", // landing page
+  "labels": {
+    "category": "public-art",
+    "country": "Canada",
+    "region": "British Columbia",
+    "city": "Vancouver"
+  },
+  "data": {
+    "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
+    "datasets": {
+      "json": {
+        "url": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-art/exports/json?lang=en&timezone=America%2FLos_Angeles", // dataset", // dataset
+        "filters": {}
+      }
+    }
+  }
+}
 ]
 
 const test_entries_for_validator = [{

@@ -32,7 +32,7 @@ const updateFile = (new_content) => {
           //     headers: {
           //         'Content-Type': 'application/json',
           //         Accept: 'application/vnd.github+json',
-          //         Authorization: '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'
+          //         Authorization: ''
           //     },
           //     body: JSON.stringify({
           //         message: message,
