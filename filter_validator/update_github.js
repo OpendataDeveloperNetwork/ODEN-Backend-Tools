@@ -65,29 +65,52 @@ const _generate_updated_content = (content, new_content) => {
   const metadata_map = new Map(
     data_arr.map(data => [data.url, data])
   )
-  console.log(metadata_map.get("https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art").data.datasets)
+  // console.log(metadata_map.get("https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art").data.datasets)
 
   let is_update_needed = false
 
   Object.entries(new_content).forEach(([url, new_data]) => {
-    let dataObj = metadata_map.get(url)
+    let obj = metadata_map.get(url)
 
-    if (dataObj !== undefined) {
-      dataObj = {
-        ...dataObj,
+    // if data entry does not exist in metadata.json, do nothing
+    if (obj !== undefined) {
+
+      // check if update is needed. update is needed if any data entry in metadata.json has a different conformSchema or correctness value
+      if (!is_update_needed) {
+        is_update_needed = _check_is_update_needed(obj.data, new_data)
+      }
+
+      obj = {
+        ...obj,
         data: {
-          ...dataObj.data,
+          ...obj.data,
           conformSchema: new_data.conformSchema,
           datasets: { ...new_data.datasets }
         }
       }
-      metadata_map.set(url, dataObj)
+      metadata_map.set(url, obj)
     }
   })
 
-  console.log(metadata_map.get("https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art").data.datasets)
+  // console.log(metadata_map.get("https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art").data.datasets)
 
   return [...metadata_map.values()]
+}
+
+const _check_is_update_needed = (existing_data, new_data) => {
+  if (new_data.conformSchema !== existing_data.conformSchema) {
+    return true
+  } else {
+    const datasetsObj = existing_data.datasets
+    for (const [dataset_type, dataset] of Object.entries(new_data.datasets)) {
+      for (const [filter_type, filter] of Object.entries(dataset.filters)) {
+        if (filter.correctness !== datasetsObj[dataset_type]?.filters?.[filter_type]?.correctness) {
+          return true
+        }
+      }
+    }
+  }
+  return false
 }
 
 const test_metadata = 
@@ -104,9 +127,17 @@ const test_metadata =
       "landingUrl404d": false
     },
     "data": {
-      "conformSchema": false,
+      "conformSchema": true,
       "schema404d": false,
-      "datasets": {}
+      "datasets": {
+        "json": {
+          "filters": {
+            "json": {
+                "correctness": 0.99,
+              }
+          }  
+        }
+      }
     },
     "info": {
       "hasEmail": true,
