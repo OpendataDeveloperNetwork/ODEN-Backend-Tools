@@ -1,29 +1,3 @@
-const defaultMetadataObj = {
-  url: "",
-  labels: {
-    categorized: false,
-    hasCountry: false,
-    hasRegion: false,
-    hasCity: false,
-  },
-  data: {
-    conformSchema: false,
-    datasets: {},
-  },
-  info: {
-    hasOwnerEmail: false,
-    landingUrl404d: false,
-    hasDataJson: false,    
-  }
-}
-
-const defaultDatasetObj = {
-  urlValid: false,
-  url404d: false,
-  hasFilter: false,
-  filters: {}
-}
-
 const updateFile = (new_content) => {
   const owner = 'OpendataDeveloperNetwork';
   const repo = 'ODEN-Client';
@@ -86,38 +60,29 @@ const _generate_updated_content = (content, new_content) => {
             
   const data_arr = test_metadata
   // console.log(data_arr)
-  console.log(new_content)
+  console.log(JSON.stringify(new_content))
 
   const metadata_map = new Map(
-    data_arr.map(obj => [obj.url, obj])
+    data_arr.map(data => [data.url, data])
   )
   console.log(metadata_map.get("https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art").data.datasets)
 
-  Object.keys(new_content).forEach( url => {
-    let dataObj = metadata_map.get(url) || defaultMetadataObj
+  let is_update_needed = false
 
-    const new_datasets = new_content[url].datasets || {}
-    const datasetsObj = dataObj.data?.datasets || {}
-    Object.entries(new_datasets).forEach( ([type, new_dataset]) => {
-      let datasetObj = datasetsObj[type] || defaultDatasetObj
-      datasetsObj[type] = {
-        ...datasetObj,
-        filters: {
-          ...new_dataset.filters,
+  Object.entries(new_content).forEach(([url, new_data]) => {
+    let dataObj = metadata_map.get(url)
+
+    if (dataObj !== undefined) {
+      dataObj = {
+        ...dataObj,
+        data: {
+          ...dataObj.data,
+          conformSchema: new_data.conformSchema,
+          datasets: { ...new_data.datasets }
         }
       }
-    })
-
-    dataObj = {
-      ...dataObj,
-      url: dataObj.url || url,
-      data: {
-        ...dataObj.data,
-        conformSchema: new_content[url].conformSchema,
-        datasets: datasetsObj
-      }
+      metadata_map.set(url, dataObj)
     }
-    metadata_map.set(url, dataObj)
   })
 
   console.log(metadata_map.get("https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art").data.datasets)
@@ -125,7 +90,8 @@ const _generate_updated_content = (content, new_content) => {
   return [...metadata_map.values()]
 }
 
-const test_metadata = [
+const test_metadata = 
+[
   {
     "id": "gSyuSab7AdnwIZq2qzm1",
     "url": "https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art",
@@ -140,14 +106,7 @@ const test_metadata = [
     "data": {
       "conformSchema": false,
       "schema404d": false,
-      "datasets": {
-        "json": {
-          "urlValid": "",
-          "url404d": "",
-          "hasFilter": "",  // (has at least one filter)
-          "filters": {}
-      },
-      }
+      "datasets": {}
     },
     "info": {
       "hasEmail": true,

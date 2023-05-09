@@ -408,7 +408,7 @@ const validateFilter = (filter, dataset, schema, stdLib) => {
 		// update needed only when errors are returned
 		if (errors.length > 0) {
 			const conformSchema = !errors.some(error => error.type === 'validation')
-			const correctness = data.length / (data.length + errors.length)
+			const correctness = Math.round((data.length / (data.length + errors.length)) * 1000)/1000 
 			return [conformSchema, correctness]
 		}
   } catch (err) {
