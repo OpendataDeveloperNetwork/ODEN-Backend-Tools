@@ -34,7 +34,7 @@ const updateFile = (new_content) => {
           //     headers: {
           //         'Content-Type': 'application/json',
           //         Accept: 'application/vnd.github+json',
-          //         Authorization: ''
+          //         Authorization: process.env.GITHUB_TOKEN
           //     },
           //     body: JSON.stringify({
           //         message: message,
