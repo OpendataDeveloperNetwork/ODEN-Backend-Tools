@@ -16,9 +16,12 @@ const test_data = require('./test_data.js').test_entries
 // TODO: Fetch the schema, filter, and data from the urls, and ensure they are valid (check to make sure the dataset is json or not ...)
 
 const test_update = async (test_entries) => {
-  const validation = await validateEntries(test_entries)
-  if (validation)
-    updateFile(validation)
+  get_entries().then(async entries => {
+    const validation = await validateEntries(entries)
+    if (validation)
+      updateFile(validation)
+  })
+
 }
 
 const validateEntries = async (entries) => {
