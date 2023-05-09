@@ -1,13 +1,13 @@
 const {
   default: axios
 } = require("axios");
-import dotenv from 'dotenv';
+const dotenv = require('dotenv');
 
 dotenv.config(); // For the .env file
 
 const validator = require('jsonschema').Validator;
 
-const updateFile = require('./update_github').updateFile
+const updateFile = require('./update_github').updateFile;
 
 const filter_blob = `const filter = function (data, std_lib, params) {
   // check for standard library and pull out required functions
@@ -107,76 +107,76 @@ const data = `[{"registryid": 8, "title_of_work": "", "artistprojectstatement": 
 // TODO: Loop through each object and ensure the schema, dataset, and filter fields exist (log if they do or dont)
 // TODO: Fetch the schema, filter, and data from the urls, and ensure they are valid (check to make sure the dataset is json or not ...)
 const test_entries = [{
-  "url": "https://data.calgary.ca/d/2kp2-hsy7", // landing page
-  "labels": {
-    "category": "public-art",
-    "country": "Canada",
-    "region": "Alberta",
-    "city": "Calgary"
+    "url": "https://data.calgary.ca/d/2kp2-hsy7", // landing page
+    "labels": {
+      "category": "public-art",
+      "country": "Canada",
+      "region": "Alberta",
+      "city": "Calgary"
+    },
+    "data": {
+      "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
+      "datasets": {
+        "json": {
+          "url": "https://data.calgary.ca/resource/2kp2-hsy7.json", // dataset
+          "filters": {
+            "json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/alberta/calgary/public-art-json-to-json.js" // filter
+          }
+        }
+      }
+    }
   },
-  "data": {
-    "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
-    "datasets": {
-      "json": {
-        "url": "https://data.calgary.ca/resource/2kp2-hsy7.json", // dataset
-        "filters": {
-          "json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/alberta/calgary/public-art-json-to-json.js" // filter
+  {
+    "url": "http://opendata-saskatoon.cloudapp.net/",
+    "labels": {
+      "category": "",
+      "country": "Canada",
+      "region": "Saskatchewan",
+      "city": "Saskatoon"
+    },
+    "data": {
+      "schema": "",
+      "datasets": {}
+    }
+  },
+  {
+    "url": "https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art", // landing page
+    "labels": {
+      "category": "public-art",
+      "country": "Canada",
+      "region": "British Columbia",
+      "city": "Prince George"
+    },
+    "data": {
+      "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
+      "datasets": {
+        "geojson": {
+          "url": "https://services2.arcgis.com/CnkB6jCzAsyli34z/arcgis/rest/services/OpenData_Parks/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson", // dataset
+          "filters": {
+            "json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/british-columbia/prince-george/public-art-geojson-to-json.js" // filter
+          }
+        }
+      }
+    }
+  },
+  {
+    "url": "https://opendata.vancouver.ca/explore/dataset/public-art/", // landing page
+    "labels": {
+      "category": "public-art",
+      "country": "Canada",
+      "region": "British Columbia",
+      "city": "Vancouver"
+    },
+    "data": {
+      "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
+      "datasets": {
+        "json": {
+          "url": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-art/exports/json?lang=en&timezone=America%2FLos_Angeles", // dataset", // dataset
+          "filters": {}
         }
       }
     }
   }
-},
-{
-  "url": "http://opendata-saskatoon.cloudapp.net/",
-  "labels": {
-    "category": "",
-    "country": "Canada",
-    "region": "Saskatchewan",
-    "city": "Saskatoon"
-  },
-  "data": {
-    "schema": "",
-    "datasets": {}
-  }
-},
-{
-  "url": "https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art", // landing page
-  "labels": {
-    "category": "public-art",
-    "country": "Canada",
-    "region": "British Columbia",
-    "city": "Prince George"
-  },
-  "data": {
-    "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
-    "datasets": {
-      "geojson": {
-        "url": "https://services2.arcgis.com/CnkB6jCzAsyli34z/arcgis/rest/services/OpenData_Parks/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson", // dataset
-        "filters": {
-          "json": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/filters/canada/british-columbia/prince-george/public-art-geojson-to-json.js" // filter
-        }
-      }
-    }
-  }
-},
-{
-  "url": "https://opendata.vancouver.ca/explore/dataset/public-art/", // landing page
-  "labels": {
-    "category": "public-art",
-    "country": "Canada",
-    "region": "British Columbia",
-    "city": "Vancouver"
-  },
-  "data": {
-    "schema": "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/schemas/public-art.json", // schema
-    "datasets": {
-      "json": {
-        "url": "https://opendata.vancouver.ca/api/explore/v2.1/catalog/datasets/public-art/exports/json?lang=en&timezone=America%2FLos_Angeles", // dataset", // dataset
-        "filters": {}
-      }
-    }
-  }
-}
 ]
 
 const test_entries_for_validator = [{
@@ -301,86 +301,91 @@ const test_entries_for_validator = [{
 // }
 
 const test_update = async (test_entries) => {
-	const validation = await validateEntries(test_entries)
+  const validation = await validateEntries(test_entries)
   if (validation)
-	  updateFile(validation)
+    updateFile(validation)
 }
 
 const validateEntries = async (entries) => {
 
-	const stdLibFunc = await get_std_lib_func()
-	.catch (err => {
-		console.log("Error fetching standard library function.")
-		return
-	})
+  const stdLibFunc = await get_std_lib_func()
+    .catch(err => {
+      console.log("Error fetching standard library function.")
+      return
+    })
 
-	const result = {}
+  const result = {}
 
-	for (const entry of entries) {
-		const url = entry.url
-		const schemaUrl = entry.data.schema
+  for (const entry of entries) {
+    const url = entry.url
+    const schemaUrl = entry.data.schema
 
-		let schema
-		try {
-			schema = await fetchUrlData(schemaUrl, "schema")
-		} catch (err) {
-			console.log("Schema url invalid for: " + entry.url)
-			continue
-		}
-		
-		const datasets = entry.data.datasets || {}
+    let schema
+    try {
+      schema = await fetchUrlData(schemaUrl, "schema")
+    } catch (err) {
+      console.log("Schema url invalid for: " + entry.url)
+      continue
+    }
 
-		if (Object.keys(datasets).length == 0) 
-			console.log("No datasets for: " + entry.url)
+    const datasets = entry.data.datasets || {}
 
-		for (const [datasetKey, datasetObj] of Object.entries(datasets)) {
-			const datasetUrl = datasetObj.url || {};
+    if (Object.keys(datasets).length == 0)
+      console.log("No datasets for: " + entry.url)
 
-			let dataset
-			try {
-				dataset = await fetchUrlData(datasetUrl, "dataset")
-			} catch (err) {
-				console.log("Dataset url invalid for: " + entry.url)
-				continue
-			}
+    for (const [datasetKey, datasetObj] of Object.entries(datasets)) {
+      const datasetUrl = datasetObj.url || {};
 
-			const filters = datasetObj.filters || {};
+      let dataset
+      try {
+        dataset = await fetchUrlData(datasetUrl, "dataset")
+      } catch (err) {
+        console.log("Dataset url invalid for: " + entry.url)
+        continue
+      }
 
-			if (Object.keys(filters).length == 0) 
-				console.log("No filter for: " + entry.url)
+      const filters = datasetObj.filters || {};
 
-			for (const [filterKey, filterUrl] of Object.entries(filters)) {
-				let filter
+      if (Object.keys(filters).length == 0)
+        console.log("No filter for: " + entry.url)
 
-				try {
-					filter = await fetchUrlData(filterUrl, "filter")
-					filterFunc = Function(filter)()
-				} catch (err) {
-					console.log("Filter url invalid for: " + url)
-					continue
-				}
-				console.log("VALID ENTRY: " + url)
+      for (const [filterKey, filterUrl] of Object.entries(filters)) {
+        let filter
 
-				const [
-					conformSchema, correctness
-				] = validateFilter(filterFunc, dataset, schema, stdLibFunc) || []
+        try {
+          filter = await fetchUrlData(filterUrl, "filter")
+          filterFunc = Function(filter)()
+        } catch (err) {
+          console.log("Filter url invalid for: " + url)
+          continue
+        }
+        console.log("VALID ENTRY: " + url)
 
-				if (conformSchema !== undefined) {
-					const schemaObj = result[url] = result[url] || { conformSchema: true, datasets: {}}
-					const datasetObj = schemaObj.datasets[datasetKey] = schemaObj.datasets[datasetKey] || { filters: {}}
-					const filterObj = datasetObj.filters[filterKey] = datasetObj.filters[filterKey] || {}
+        const [
+          conformSchema, correctness
+        ] = validateFilter(filterFunc, dataset, schema, stdLibFunc) || []
 
-					schemaObj.conformSchema = !schemaObj.conformSchema || conformSchema
-					filterObj.correctness = correctness
-					
-				} else {
-					console.log("No validation result.")
-				}
-				console.log('')
-			}
-		}
-	}
-	return result
+        if (conformSchema !== undefined) {
+          const schemaObj = result[url] = result[url] || {
+            conformSchema: true,
+            datasets: {}
+          }
+          const datasetObj = schemaObj.datasets[datasetKey] = schemaObj.datasets[datasetKey] || {
+            filters: {}
+          }
+          const filterObj = datasetObj.filters[filterKey] = datasetObj.filters[filterKey] || {}
+
+          schemaObj.conformSchema = !schemaObj.conformSchema || conformSchema
+          filterObj.correctness = correctness
+
+        } else {
+          console.log("No validation result.")
+        }
+        console.log('')
+      }
+    }
+  }
+  return result
 }
 
 const fetchUrlData = async (urlParam, type) => {
@@ -404,16 +409,16 @@ const validateFilter = (filter, dataset, schema, stdLib) => {
   const v = new validator();
 
   try {
-		const {
-			data = [], errors = []
-		} = filter(dataset, stdLib, schema, v, false) || {}
-		
-		// update needed only when errors are returned
-		if (errors.length > 0) {
-			const conformSchema = !errors.some(error => error.type === 'validation')
-			const correctness = Math.round((data.length / (data.length + errors.length)) * 1000)/1000 
-			return [conformSchema, correctness]
-		}
+    const {
+      data = [], errors = []
+    } = filter(dataset, stdLib, schema, v, false) || {}
+
+    // update needed only when errors are returned
+    if (errors.length > 0) {
+      const conformSchema = !errors.some(error => error.type === 'validation')
+      const correctness = Math.round((data.length / (data.length + errors.length)) * 1000) / 1000
+      return [conformSchema, correctness]
+    }
   } catch (err) {
     console.log("Filter is invalid with the following error:\n" + err)
   }
@@ -431,7 +436,7 @@ const get_entries = async () => {
 }
 
 const get_std_lib_func = async () => {
-	const res = await axios({
+  const res = await axios({
     url: "https://raw.githubusercontent.com/OpendataDeveloperNetwork/ODEN-Transmogrifiers/dev/libraries/standard.js",
     method: 'GET',
     responseType: 'blob',
