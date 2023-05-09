@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, createWriteStream, readFileSync } from 'fs';
-import { basename, join } from 'path';
+import { existsSync, mkdirSync, createWriteStream, readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import fs from 'fs';
@@ -140,7 +140,6 @@ async function compare_fields(data_json_url, data_json, file_data, changes) {
     }
 
     for (let i = 0; i < data_json.dataset.length; i++) {
-      // TODO make sure the datasets @type is dcat:Dataset
       // Search for the title in the file_data
       const title = data_json.dataset[i].title;
       const index = file_data[filename].findIndex(x => x.title === title);
@@ -155,7 +154,15 @@ async function compare_fields(data_json_url, data_json, file_data, changes) {
       } else {
         changes[filename].push({ title: title, missing: true });
       }
+
     }
+    if (changes[filename].length > 0) {
+      console.log(`Changes found in ${filename}`);
+      // Replace downloaded file with the new file
+      const destPath = join(process.env.DOWNLOAD_DIRECTORY, filename);
+      writeFileSync(destPath, JSON.stringify(data_json, null, 2), { flag: 'w' });
+    }
+
   } else {
     console.log(`${filename} does not exist in file_data`);
   }
