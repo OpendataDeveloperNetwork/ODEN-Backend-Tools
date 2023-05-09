@@ -1,3 +1,5 @@
+const test_data = require('./test_data.js').test_metadata
+
 const updateFile = (new_content) => {
   const owner = 'OpendataDeveloperNetwork';
   const repo = 'ODEN-Client';
@@ -16,7 +18,7 @@ const updateFile = (new_content) => {
 
           try {
             const content_to_update = _generate_updated_content(content, new_content)
-            console.log(content_to_update)
+            // console.log(content_to_update)
           } catch (err) {
             console.log(err)
           }
@@ -32,7 +34,7 @@ const updateFile = (new_content) => {
           //     headers: {
           //         'Content-Type': 'application/json',
           //         Accept: 'application/vnd.github+json',
-          //         Authorization: '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'
+          //         Authorization: ''
           //     },
           //     body: JSON.stringify({
           //         message: message,
@@ -58,7 +60,7 @@ const updateFile = (new_content) => {
 const _generate_updated_content = (content, new_content) => {
   // const data_arr = JSON.parse(content)
             
-  const data_arr = test_metadata
+  const data_arr = test_data
   // console.log(data_arr)
   console.log(JSON.stringify(new_content))
 
@@ -66,6 +68,7 @@ const _generate_updated_content = (content, new_content) => {
     data_arr.map(data => [data.url, data])
   )
   // console.log(metadata_map.get("https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art").data.datasets)
+  // console.log(metadata_map)
 
   let is_update_needed = false
 
@@ -93,6 +96,7 @@ const _generate_updated_content = (content, new_content) => {
   })
 
   // console.log(metadata_map.get("https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art").data.datasets)
+  // console.log(metadata_map)
 
   return [...metadata_map.values()]
 }
@@ -112,150 +116,6 @@ const _check_is_update_needed = (existing_data, new_data) => {
   }
   return false
 }
-
-const test_metadata = 
-[
-  {
-    "id": "gSyuSab7AdnwIZq2qzm1",
-    "url": "https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art",
-    "labels": {
-      "categorized": false,
-      "hasCountry": true,
-      "hasRegion": true,
-      "hasCity": true,
-      "isFilterable": false,
-      "landingUrl404d": false
-    },
-    "data": {
-      "conformSchema": true,
-      "schema404d": false,
-      "datasets": {
-        "json": {
-          "filters": {
-            "json": {
-                "correctness": 0.99,
-              }
-          }  
-        }
-      }
-    },
-    "info": {
-      "hasEmail": true,
-      "hasName": true,
-      "submissionTime": 1683156831392
-    }
-  },
-  {
-    "id": "gSyuSab7AdnwIZq2qzm1",
-    "url": "https://data.calgary.ca/d/2kp2-hsy7",
-    "labels": {
-      "categorized": false,
-      "hasCountry": true,
-      "hasRegion": true,
-      "hasCity": true,
-      "isFilterable": false,
-      "landingUrl404d": false
-    },
-    "data": {
-      "conformSchema": false,
-      "schema404d": false,
-      "datasets": {}
-    },
-    "info": {
-      "hasEmail": true,
-      "hasName": true,
-      "submissionTime": 1683156831392
-    }
-  },
-  {
-    "id": "gSyuSab7AdnwIZq2qzm1",
-    "url": "https://data.calgary.ca/d/4jah-h97u",
-    "labels": {
-      "categorized": false,
-      "hasCountry": true,
-      "hasRegion": true,
-      "hasCity": true,
-      "isFilterable": false,
-      "landingUrl404d": false
-    },
-    "data": {
-      "conformSchema": false,
-      "schema404d": false,
-      "datasets": {}
-    },
-    "info": {
-      "hasEmail": true,
-      "hasName": true,
-      "submissionTime": 1683156831392
-    }
-  },
-  {
-    "id": "gSyuSab7AdnwIZq2qzm1",
-    "url": "https://data.calgary.ca/d/6933-unw5",
-    "labels": {
-      "categorized": false,
-      "hasCountry": true,
-      "hasRegion": true,
-      "hasCity": true,
-      "isFilterable": false,
-      "landingUrl404d": false
-    },
-    "data": {
-      "conformSchema": false,
-      "schema404d": false,
-      "datasets": {}
-    },
-    "info": {
-      "hasEmail": true,
-      "hasName": true,
-      "submissionTime": 1683156831392
-    }
-  },
-  {
-    "id": "gSyuSab7AdnwIZq2qzm1",
-    "url": "https://data.calgary.ca/d/c2es-76ed",
-    "labels": {
-      "categorized": false,
-      "hasCountry": true,
-      "hasRegion": true,
-      "hasCity": true,
-      "isFilterable": false,
-      "landingUrl404d": false
-    },
-    "data": {
-      "conformSchema": false,
-      "schema404d": false,
-      "datasets": {}
-    },
-    "info": {
-      "hasEmail": true,
-      "hasName": true,
-      "submissionTime": 1683156831392
-    }
-  },
-  {
-    "id": "gSyuSab7AdnwIZq2qzm1",
-    "url": "https://data.calgary.ca/d/tfmd-grpe",
-    "labels": {
-      "categorized": false,
-      "hasCountry": true,
-      "hasRegion": true,
-      "hasCity": true,
-      "isFilterable": false,
-      "landingUrl404d": false
-    },
-    "data": {
-      "conformSchema": false,
-      "schema404d": false,
-      "datasets": {}
-    },
-    "info": {
-      "hasEmail": true,
-      "hasName": true,
-      "submissionTime": 1683156831392
-    }
-  }
-]
 
 module.exports = { updateFile }
 
