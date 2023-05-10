@@ -1,9 +1,6 @@
 const {
   default: axios
 } = require("axios");
-const dotenv = require('dotenv');
-
-dotenv.config(); // For the .env file
 
 const validator = require('jsonschema').Validator
 
@@ -16,9 +13,12 @@ const test_data = require('./test_data.js').test_entries
 // TODO: Fetch the schema, filter, and data from the urls, and ensure they are valid (check to make sure the dataset is json or not ...)
 
 const test_update = async (test_entries) => {
-  const validation = await validateEntries(test_entries)
-  if (validation)
-    updateFile(validation)
+  get_entries().then(async entries => {
+    const validation = await validateEntries(entries)
+    if (validation)
+      updateFile(validation)
+  })
+
 }
 
 const validateEntries = async (entries) => {
@@ -94,7 +94,7 @@ const validateEntries = async (entries) => {
           filterObj.correctness = correctness
 
         } else {
-          console.log("No validation result.")
+          console.log("No validation result for " + url)
         }
         console.log('')
       }
@@ -111,7 +111,7 @@ const fetchUrlData = async (urlParam, type) => {
     responseType: 'blob',
   })
 
-  if (["schema", "dataset"].includes(type) && !(res.headers.get("Content-Type").includes('application/json') || urlParam.endsWith(".json"))) {
+  if (["schema", "dataset"].includes(type) && !(res.headers.get("Content-Type").includes('application/json') || urlParam.endsWith("json"))) {
     throw Error
   } else if (type == "filter" && !(res.headers.get("Content-Type").includes('text/plain') || urlParam.endsWith(".js"))) {
     throw Error
@@ -135,7 +135,7 @@ const validateFilter = (filter, dataset, schema, stdLib) => {
       return [conformSchema, correctness]
     }
   } catch (err) {
-    console.log("Filter is invalid with the following error:\n" + err)
+    console.log("Filter is invalid with the following error: " + err)
   }
 }
 

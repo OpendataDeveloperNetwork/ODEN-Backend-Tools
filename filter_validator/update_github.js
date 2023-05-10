@@ -1,10 +1,13 @@
+const dotenv = require('dotenv');
+
+dotenv.config(); // For the .env file
+
 const test_data = require('./test_data.js').test_metadata
 
 const updateFile = (new_content) => {
   const owner = 'OpendataDeveloperNetwork';
   const repo = 'ODEN-Client';
   const file_path = 'metadata.json';
-  // const new_content = { cor: 21 }; // The new content you want to write to the file
   
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${file_path}`;
   
@@ -14,41 +17,39 @@ const updateFile = (new_content) => {
       .then((data) => {
           const content = Buffer.from(data.content, 'base64').toString();
           const sha = data.sha;
-          const message = 'Update test.json';
 
-          try {
-            const content_to_update = _generate_updated_content(content, new_content)
-            // console.log(content_to_update)
-          } catch (err) {
-            console.log(err)
+          const [updated_urls, new_file_content] = _generate_new_file_content(content, new_content)
+
+          if (new_file_content) {
+              const new_file_content_str = JSON.stringify(new_file_content, null, 2);
+              const new_file_content_base64 = Buffer.from(new_file_content_str).toString('base64');
+
+              //TODO: add identifiers of each updated entry in commit message
+              const message = `Updated the following entries in metadata.json: ${updated_urls.join(", ")}`;
+      
+              fetch(url, {
+                  method: 'PUT',
+                  headers: {
+                      'Content-Type': 'application/json',
+                      Accept: 'application/vnd.github+json',
+                      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`
+                  },
+                  body: JSON.stringify({
+                      message: message,
+                      content: new_file_content_base64,
+                      sha: sha
+                  })
+              })
+              .then((res) => res.json())
+              .then((data) => {
+                  console.log(`File ${file_path} in ${owner}/${repo} repository has been updated. Response:`, data);
+              })
+              .catch((err) => {
+                  console.error(`Error updating file ${file_path} in ${owner}/${repo} repository:`, err);
+              });
+          } else {
+            console.log("No update needed.")
           }
-  
-          // const new_file_content = { ...JSON.parse(content), ...new_content };
-          // const new_file_content_str = JSON.stringify(new_file_content, null, 2);
-          // const new_file_content_base64 = Buffer.from(new_file_content_str).toString('base64');
-
-          
-  
-          // fetch(url, {
-          //     method: 'PUT',
-          //     headers: {
-          //         'Content-Type': 'application/json',
-          //         Accept: 'application/vnd.github+json',
-          //         Authorization: process.env.GITHUB_TOKEN
-          //     },
-          //     body: JSON.stringify({
-          //         message: message,
-          //         content: new_file_content_base64,
-          //         sha: sha
-          //     })
-          // })
-          //     .then((res) => res.json())
-          //     .then((data) => {
-          //         console.log(`File ${file_path} in ${owner}/${repo} repository has been updated. Response:`, data);
-          //     })
-          //     .catch((err) => {
-          //         console.error(`Error updating file ${file_path} in ${owner}/${repo} repository:`, err);
-          //     });
       })
       .catch((err) => {
           console.error(`Error fetching file ${file_path} in ${owner}/${repo} repository:`, err);
@@ -57,12 +58,11 @@ const updateFile = (new_content) => {
 
 // updateFile({})
 
-const _generate_updated_content = (content, new_content) => {
-  // const data_arr = JSON.parse(content)
+const _generate_new_file_content = (content, new_content) => {
+  const data_arr = JSON.parse(content)
             
-  const data_arr = test_data
+  // const data_arr = test_data
   // console.log(data_arr)
-  console.log(JSON.stringify(new_content))
 
   const metadata_map = new Map(
     data_arr.map(data => [data.url, data])
@@ -70,35 +70,40 @@ const _generate_updated_content = (content, new_content) => {
   // console.log(metadata_map.get("https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art").data.datasets)
   // console.log(metadata_map)
 
-  let is_update_needed = false
+  // file update is needed if any data entry in metadata.json has a different conformSchema or correctness value
+  let is_file_update_needed = false
+  const updated_entries_urls = []
 
   Object.entries(new_content).forEach(([url, new_data]) => {
-    let obj = metadata_map.get(url)
+    const obj = metadata_map.get(url)
 
     // if data entry does not exist in metadata.json, do nothing
     if (obj !== undefined) {
 
-      // check if update is needed. update is needed if any data entry in metadata.json has a different conformSchema or correctness value
-      if (!is_update_needed) {
-        is_update_needed = _check_is_update_needed(obj.data, new_data)
-      }
+      // check if update is needed for each entry. 
+      const is_entry_update_needed = _check_is_update_needed(obj.data, new_data)
+      is_file_update_needed = is_file_update_needed || is_entry_update_needed
 
-      obj = {
-        ...obj,
-        data: {
-          ...obj.data,
-          conformSchema: new_data.conformSchema,
-          datasets: { ...new_data.datasets }
+      if (is_entry_update_needed) {
+        // truncate url
+        updated_entries_urls.push(url.replace(/^(https?:\/\/)?([^\/]+)(\/.*)?$/, '$2'))
+        const updated_obj = {
+          ...obj,
+          data: {
+            ...obj.data,
+            conformSchema: new_data.conformSchema,
+            datasets: { ...new_data.datasets }
+          }
         }
+        metadata_map.set(url, updated_obj)
       }
-      metadata_map.set(url, obj)
     }
   })
 
   // console.log(metadata_map.get("https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art").data.datasets)
-  // console.log(metadata_map)
+  // console.log(is_update_needed, metadata_map)
 
-  return [...metadata_map.values()]
+  return is_file_update_needed ? [updated_entries_urls, [...metadata_map.values()]] : [];
 }
 
 const _check_is_update_needed = (existing_data, new_data) => {
