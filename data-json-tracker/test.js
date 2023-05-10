@@ -1,87 +1,49 @@
-/**
- * Create a list of regexes from a list of categories
- * @param {string[]} category_list List of categories to search for
- * @returns List of regexes
- */
-function get_regex_list(category_list) {
-    const regex_list = [];
-    try {
-        category_list.map(category => {
-            regex_list.push(new RegExp(category, 'i'));
-        })
-    } catch (error) {
-        console.log(`Error creating regex list: ${error.message}`);
-        return false;
-    }
-    return regex_list;
-}
+import fetch from 'node-fetch';
 
-/**
- * Search for a list of categories in a data.json file
- * @param {string[]} category_list List of categories to search for
- * @param {string} data_json_list Data.json file to search in
- * @returns Object with categories as keys and title + landingPage as values
- */
-async function search_for_category(category_list, data_json_list) {
-    const regex_list = get_regex_list(category_list);
-    if (!regex_list) {
-        return false;
-    }
+const owner = 'OpendataDeveloperNetwork';
+const repo = 'ODEN-Client';
+const file_path = 'data.json';
+const new_content = { cor: 21 }; // The new content you want to write to the file
 
-    const result_object = {};
+const url = `https://api.github.com/repos/${owner}/${repo}/contents/${file_path}`;
 
-    // Initialize result object
-    category_list.map(category => {
-        result_object[category] = [];
-    })
-    // Fetch each data.json file and search for categories
-    const promises = data_json_list.map(data_json_url => {
-        return fetch(data_json_url)
-            .then(response => response.json())
-            .then(json => {
-                json.dataset.map(dset => {
-                    // Check if title matches any of the regexes
-                    const regex = regex_list.find(regex => dset.title.match(regex));
-                    if (regex) {
-                        // Add it to the result object
-                        const category = category_list[regex_list.indexOf(regex)];
-                        result_object[category].push({
-                            title: dset.title,
-                            landingPage: dset.landingPage
-                        });
-                    }
-                })
+// Get the data
+fetch(url)
+    .then((res) => res.json())
+    .then((data) => {
+        // Update the file
+        const content = Buffer.from(data.content, 'base64').toString();
+        const sha = data.sha;
+        // Commit Message
+        const message = 'Testing the github api';
+
+        // Create New file content
+        const new_file_content = JSON.parse(content);
+        const new_file_content_str = JSON.stringify(new_file_content, null, 2);
+        const new_file_content_base64 = Buffer.from(new_file_content_str).toString('base64');
+        console.log(new_file_content);
+        // Push the changes to the github
+        fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/vnd.github+json',
+                Authorization: 'Bearer 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'
+            },
+            body: JSON.stringify({
+                message: message,
+                content: new_file_content_base64,
+                sha: sha
             })
-            .catch(error => {
-                console.log(`Error searching ${data_json_url}: ${error.message}`);
+        })
+            .then((res) => res.json())
+            .then((data) => {
+                console.log(`File ${file_path} in ${owner}/${repo} repository has been updated. Response:`, data);
+            })
+            .catch((err) => {
+                console.error(`Error updating file ${file_path} in ${owner}/${repo} repository:`, err);
             });
+    })
+    .catch((err) => {
+        console.error(`Error fetching file ${file_path} in ${owner}/${repo} repository:`, err);
     });
-
-    await Promise.all(promises);
-
-    return result_object;
-}
-
-async function test() {
-    const category_list = ["art", "bike", "food"]
-    const data_json_list = ["http://opendata.vancouver.ca/data.json", "http://open.hamilton.ca/data.json"];
-    const res = await search_for_category(category_list, data_json_list);
-    console.log(res);
-}
-
-test();
-
-// Example output:
-// {
-//     art: [{
-//             title: 'Public art - Artists',
-//             landingPage: 'https://opendata.vancouver.ca/explore/dataset/public-art-artists/'
-//         },
-//         {
-//             title: 'Public art',
-//             landingPage: 'https://opendata.vancouver.ca/explore/dataset/public-art/'
-//         }
-//     ],
-//     bike: [...],
-//     food: [...]
-// }

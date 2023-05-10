@@ -6,6 +6,8 @@ import fs from 'fs';
 
 dotenv.config();
 
+var outstanding_errors = [];
+
 /**
  * Removes the protocol from the url
  * @param {string} url URL to remove the protocol from
@@ -20,6 +22,20 @@ function remove_url_protocol(url) {
     return urlsWithoutProtocol;
   }
   return url.replace(/^https?:\/\//i, '');
+}
+
+
+function remove_html_from_string(str) {
+  return str.replace(/<\/?[^>]+(>|$)/g, "");
+}
+
+function cutStringToMaxWords(str, maxWords = 15) {
+  const words = str.split(" ");
+  if (words.length > maxWords) {
+    return words.slice(0, maxWords).join(" ") + " ...";
+  } else {
+    return str;
+  }
 }
 
 /**
@@ -37,7 +53,6 @@ async function downloadFiles(link) {
     const response = await fetch(link);
 
     if (!response.ok) {
-      console.log(`Failed to download ${link}: ${response.status} ${response.statusText}`);
       throw new Error(`Failed to download ${link}: ${response.status} ${response.statusText}`);
     }
 
@@ -58,6 +73,7 @@ async function downloadFiles(link) {
     return true;
   } catch (error) {
     console.error(`Error downloading files: ${error.message}`);
+    outstanding_errors.push(error.message);
     return false;
   }
 }
@@ -80,7 +96,6 @@ async function check_directory(data_json_list) {
         const status = await downloadFiles(data_json_list[i]);
         if (!status) {
           console.log(`Failed to download ${data_json_list[i]}`);
-          return false;
         }
       }
     }
@@ -103,21 +118,26 @@ async function parse_data_json(data_json_list) {
   var file_data = {};
 
   for (let i = 0; i < data_json_list.length; i++) {
-    const filename = remove_url_protocol(data_json_list[i]).replace(/:|\//g, "-");;
-    const destPath = join(process.env.DOWNLOAD_DIRECTORY, filename);
-    file_data[filename] = [];
+    try {
+      const filename = remove_url_protocol(data_json_list[i]).replace(/:|\//g, "-");;
+      const destPath = join(process.env.DOWNLOAD_DIRECTORY, filename);
+      file_data[filename] = [];
 
-    const data = JSON.parse(readFileSync(destPath, 'utf8'));
+      const data = JSON.parse(readFileSync(destPath, 'utf8'));
 
-    if (data.conformsTo === process.env.US_STANDARED && data["@type"] === process.env.TYPE) {
-      console.log(`${filename} conforms to the US standard and has the right type`);
-      for (let j = 0; j < data.dataset.length; j++) {
-        file_data[filename].push({
-          title: data.dataset[j].title,
-          description: data.dataset[j].description ? data.dataset[j].description : "",
-          landingPage: data.dataset[j].landingPage,
-        });
+      if (data.conformsTo === process.env.US_STANDARED && data["@type"] === process.env.TYPE) {
+        console.log(`${filename} conforms to the US standard and has the right type`);
+        for (let j = 0; j < data.dataset.length; j++) {
+          file_data[filename].push({
+            title: data.dataset[j].title,
+            description: data.dataset[j].description ? data.dataset[j].description : "",
+            landingPage: data.dataset[j].landingPage,
+          });
+        }
       }
+    } catch (error) {
+      console.error(`Error parsing data.json/finding file: ${error.message}`);
+      outstanding_errors.push(error.message);
     }
   }
 
@@ -142,19 +162,22 @@ async function compare_fields(data_json_url, data_json, file_data, changes) {
     for (let i = 0; i < data_json.dataset.length; i++) {
       // Search for the title in the file_data
       const title = data_json.dataset[i].title;
-      const index = file_data[filename].findIndex(x => x.title === title);
-      if (index !== -1) {
-        // Compare the description and landing page
-        if (data_json.dataset[i].description !== file_data[filename][index].description) {
-          changes[filename].push({ title: title, description: data_json.dataset[i].description });
-        }
-        if (data_json.dataset[i].landingPage !== file_data[filename][index].landingPage) {
-          changes[filename].push({ title: title, landingPage: data_json.dataset[i].landingPage });
-        }
-      } else {
-        changes[filename].push({ title: title, missing: true });
-      }
+      const description = data_json.dataset[i].description;
+      const landingPage = data_json.dataset[i].landingPage;
 
+      const title_index = file_data[filename].findIndex(x => x.title === title);
+      const description_index = file_data[filename].findIndex(x => x.description === description);
+      const landingpage_index = file_data[filename].findIndex(x => x.landingPage === landingPage);
+
+      if (title_index === -1) {
+        changes[filename].push({ title: title, missing: 'title' });
+      }
+      if (description_index === -1) {
+        changes[filename].push({ title: title, description: cutStringToMaxWords(data_json.dataset[i].description ?? '', 15), missing: 'description' });
+      }
+      if (landingpage_index === -1) {
+        changes[filename].push({ title: title, landingPage: data_json.dataset[i].landingPage, missing: 'landing page' });
+      }
     }
     if (changes[filename].length > 0) {
       console.log(`Changes found in ${filename}`);
@@ -187,7 +210,8 @@ async function compare_data(data_json_list, file_data) {
         console.log(`${data_json_url} does not conform to the US standard and has the right type`);
       }
     } catch (error) {
-      console.log(error);
+      error.message = `Error fetching data.json: ${error.message}`;
+      outstanding_errors.push(error.message);
     }
   }));
   return changes;
@@ -207,21 +231,66 @@ async function log_changes(changes) {
       changes: changesArray.reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {})
     };
     fs.appendFile('log.txt', JSON.stringify(log) + '\n', (err) => {
-      if (err) throw err;
+      if (err) {
+        outstanding_errors.push(err);
+      }
+      console.log('Changes logged to log.txt');
+    });
+  }
+  if (outstanding_errors.length > 0) {
+    fs.appendFile('log.txt', JSON.stringify(outstanding_errors) + '\n', (err) => {
+      if (err) {
+        outstanding_errors.push(err);
+      }
       console.log('Changes logged to log.txt');
     });
   }
 }
 
-// For future the filter will be using the transmogrifier
+function generateHtmlTable(changes) {
+  let html = '<table><thead><tr><th>Timestamp</th><th>Dataset</th><th>Title</th><th>Description</th><th>Missing</th><th>Landing Page</th></tr></thead><tbody>';
+
+  for (const [dataset, datasetChanges] of Object.entries(changes)) {
+    for (const change of datasetChanges) {
+      const title = remove_html_from_string(change.title ?? '');
+      const description = remove_html_from_string(change.description ?? '');
+      const missing = change.missing ?? false;
+      const landingPage = remove_html_from_string(change.landingPage ?? '');
+
+      const timestamp = new Date(change.timestamp).toLocaleString();
+
+      html += `<tr><td>${timestamp}</td><td>${dataset}</td><td>${title}</td><td>${description}</td><td>${missing}</td><td>${landingPage}</td></tr>`;
+    }
+  }
+
+  html += '</tbody></table>';
+
+  return html;
+}
+
+async function get_data_json_list() {
+  try {
+    const response = await fetch(process.env.DATA_JSON_LIST_URL);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    outstanding_errors.push(error);
+  }
+  return [];
+}
+
+// For future (September) the filter will be using the transmogrifier
 
 async function main() {
-  const data_json_list = ['http://opendata.vancouver.ca/data.json', "https://opendata.victoria.ca/data.json"];
+  const data_json_list = await get_data_json_list();
+  // const data_json_list = ['http://opendata.vancouver.ca/data.json', "https://opendata.victoria.ca/data.json"];
   const directory_exists = await check_directory(data_json_list);
   if (directory_exists) {
     const file_data = await parse_data_json(data_json_list);
     const changes = await compare_data(data_json_list, file_data);
     await log_changes(changes)
+    const html = generateHtmlTable(changes);
+    console.log(html);
   }
 }
 
