@@ -14,9 +14,13 @@ const test_data = require('./test_data.js').test_entries
 
 
 const test_update = async (test_entries) => {
-  const validation = await validateEntries(test_entries)
-  if (validation)
-    updateFile(validation)
+  get_entries().then(async entries => {
+    const validation = await validateEntries(entries)
+    if (validation)
+      updateFile(validation)
+  }).catch(err => { 
+    console.log("Error fetching entries from data.json") 
+  })
 }
 
 
