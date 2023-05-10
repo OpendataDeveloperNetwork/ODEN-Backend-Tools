@@ -141,8 +141,9 @@ const validateEntries = async (entries) => {
     }
 
   }
-  if (invalid_entry_count > 0)
-    send_notification()
+  // if (invalid_entry_count > 0)
+    // send_notification()
+  console.log(email_message)
   
   return result
 }
@@ -170,7 +171,7 @@ const validateFilter = (filter, dataset, schema, stdLib) => {
   try {
     const {
       data = [], errors = []
-    } = filter(dataset, stdLib, schema, v, false) || {}
+    } = filter(dataset, {schema:schema, library:stdLib, JSONvalidator: v}) || {}
 
     // update needed only when errors are returned
     if (errors.length > 0) {
