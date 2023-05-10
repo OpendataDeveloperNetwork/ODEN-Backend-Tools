@@ -1,5 +1,0 @@
-filter_validator/service-key.json
-# Dependency directories
-filter_validator/node_modules
-filter_validator/package-lock.json
-filter_validator/.env
