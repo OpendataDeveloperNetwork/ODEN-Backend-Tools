@@ -1,9 +1,6 @@
 const {
   default: axios
 } = require("axios");
-const dotenv = require('dotenv');
-
-dotenv.config(); // For the .env file
 
 const validator = require('jsonschema').Validator
 

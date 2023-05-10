@@ -1,10 +1,13 @@
+const dotenv = require('dotenv');
+
+dotenv.config(); // For the .env file
+
 const test_data = require('./test_data.js').test_metadata
 
 const updateFile = (new_content) => {
   const owner = 'OpendataDeveloperNetwork';
   const repo = 'ODEN-Client';
   const file_path = 'metadata.json';
-  // const new_content = { cor: 21 }; // The new content you want to write to the file
   
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${file_path}`;
   
@@ -14,22 +17,22 @@ const updateFile = (new_content) => {
       .then((data) => {
           const content = Buffer.from(data.content, 'base64').toString();
           const sha = data.sha;
-          const message = 'Update test.json';
 
-          const new_file_content = _generate_new_file_content(content, new_content)
+          const [updated_urls, new_file_content] = _generate_new_file_content(content, new_content)
 
-          // console.log(new_file_content)
-
-          if (new_file_content && false) {
+          if (new_file_content) {
               const new_file_content_str = JSON.stringify(new_file_content, null, 2);
               const new_file_content_base64 = Buffer.from(new_file_content_str).toString('base64');
+
+              //TODO: add identifiers of each updated entry in commit message
+              const message = `Update ${updated_urls.length} entries in metadata.json`;
       
               fetch(url, {
                   method: 'PUT',
                   headers: {
                       'Content-Type': 'application/json',
                       Accept: 'application/vnd.github+json',
-                      Authorization: process.env.GITHUB_TOKEN
+                      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`
                   },
                   body: JSON.stringify({
                       message: message,
@@ -54,11 +57,10 @@ const updateFile = (new_content) => {
 // updateFile({})
 
 const _generate_new_file_content = (content, new_content) => {
-  // const data_arr = JSON.parse(content)
+  const data_arr = JSON.parse(content)
             
-  const data_arr = test_data
+  // const data_arr = test_data
   // console.log(data_arr)
-  console.log(JSON.stringify(new_content))
 
   const metadata_map = new Map(
     data_arr.map(data => [data.url, data])
@@ -66,7 +68,9 @@ const _generate_new_file_content = (content, new_content) => {
   // console.log(metadata_map.get("https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art").data.datasets)
   // console.log(metadata_map)
 
-  let is_update_needed = false
+  // file update is needed if any data entry in metadata.json has a different conformSchema or correctness value
+  let is_file_update_needed = false
+  const updated_entries_urls = []
 
   Object.entries(new_content).forEach(([url, new_data]) => {
     const obj = metadata_map.get(url)
@@ -74,27 +78,29 @@ const _generate_new_file_content = (content, new_content) => {
     // if data entry does not exist in metadata.json, do nothing
     if (obj !== undefined) {
 
-      // check if update is needed. update is needed if any data entry in metadata.json has a different conformSchema or correctness value
-      if (!is_update_needed) {
-        is_update_needed = _check_is_update_needed(obj.data, new_data)
-      }
+      // check if update is needed for each entry. 
+      const is_entry_update_needed = _check_is_update_needed(obj.data, new_data)
+      is_file_update_needed = is_file_update_needed || is_entry_update_needed
 
-      const updated_obj = {
-        ...obj,
-        data: {
-          ...obj.data,
-          conformSchema: new_data.conformSchema,
-          datasets: { ...new_data.datasets }
+      if (is_entry_update_needed) {
+        updated_entries_urls.append(url)
+        const updated_obj = {
+          ...obj,
+          data: {
+            ...obj.data,
+            conformSchema: new_data.conformSchema,
+            datasets: { ...new_data.datasets }
+          }
         }
+        metadata_map.set(url, updated_obj)
       }
-      metadata_map.set(url, updated_obj)
     }
   })
 
   // console.log(metadata_map.get("https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art").data.datasets)
-  console.log(metadata_map)
+  // console.log(is_update_needed, metadata_map)
 
-  return is_update_needed ? [...metadata_map.values()] : null
+  return is_file_update_needed ? [updated_entries_urls, [...metadata_map.values()]] : [];
 }
 
 const _check_is_update_needed = (existing_data, new_data) => {
