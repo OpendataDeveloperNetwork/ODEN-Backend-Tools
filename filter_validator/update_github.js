@@ -25,7 +25,7 @@ const updateFile = (new_content) => {
               const new_file_content_base64 = Buffer.from(new_file_content_str).toString('base64');
 
               //TODO: add identifiers of each updated entry in commit message
-              const message = `Update ${updated_urls.length} entries in metadata.json`;
+              const message = `Updated the following entries in metadata.json: ${updated_urls.join(", ")}}`;
       
               fetch(url, {
                   method: 'PUT',
@@ -47,6 +47,8 @@ const updateFile = (new_content) => {
               .catch((err) => {
                   console.error(`Error updating file ${file_path} in ${owner}/${repo} repository:`, err);
               });
+          } else {
+            console.log("No update needed.")
           }
       })
       .catch((err) => {
@@ -83,7 +85,8 @@ const _generate_new_file_content = (content, new_content) => {
       is_file_update_needed = is_file_update_needed || is_entry_update_needed
 
       if (is_entry_update_needed) {
-        updated_entries_urls.append(url)
+        // truncate url
+        updated_entries_urls.append(url.replace(/^(https?:\/\/)?([^\/]+)(\/.*)?$/, '$2'))
         const updated_obj = {
           ...obj,
           data: {
