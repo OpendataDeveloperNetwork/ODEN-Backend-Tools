@@ -17,10 +17,42 @@ const data = `[{"registryid": 8, "title_of_work": "", "artistprojectstatement": 
 // TODO: Loop through each object and ensure the schema, dataset, and filter fields exist (log if they do or dont)
 // TODO: Fetch the schema, filter, and data from the urls, and ensure they are valid (check to make sure the dataset is json or not ...)
 
+
 const test_update = async (test_entries) => {
   const validation = await validateEntries(test_entries)
   if (validation)
     updateFile(validation)
+}
+
+var email_message = '<p><b>The following filter entries have failed:</b><br><br>'
+var short_message = "<p><b>The following filter entries have failed:</b><br><br>1. Filter1</p>"
+var email_message_string = '<p><b>The following filter entries have failed:</b><br><br>1. Filter is invalid for: https://data.calgary.ca/d/2kp2-hsy7<br>2. Schema url invalid for: http://opendata-saskatoon.cloudapp.net/<br>3. No filters for: https://opendata.vancouver.ca/explore/dataset/public-art/<br>4. Filter url invalid for: https://www.data.act.gov.au/d/j746-krni<br>5. Filter url invalid for: https://open.hamilton.ca/maps/a0bcdf73598c424d9e7ef72861dca71c_10<br>6. Filter url invalid for: https://data.tempe.gov/maps/tempegov::public-art-sites<br>7. Filter url invalid for: https://data.honolulu.gov/d/yef5-h88r<br></p>'
+var invalid_entry_count = 0
+
+const send_notification = async () => {
+  email_message += "</p>"
+  console.log(email_message)
+
+  const requestBody = {
+    subject: 'Notification: Invalid Entries',
+    message: email_message
+  };
+
+  axios.post('http://localhost:8080/notifyAdmins', requestBody)
+    .then((response) => {
+      console.log(response.data);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+
+}
+
+
+const add_to_email = (message) => {
+  invalid_entry_count++
+  email_message += invalid_entry_count + '. ' + message + '<br>'
+
 }
 
 const validateEntries = async (entries) => {
@@ -36,19 +68,25 @@ const validateEntries = async (entries) => {
   for (const entry of entries) {
     const url = entry.url
     const schemaUrl = entry.data.schema
+    console.log('')
 
     let schema
     try {
       schema = await fetchUrlData(schemaUrl, "schema")
     } catch (err) {
-      console.log("Schema url invalid for: " + entry.url)
+      console.log("Schema url invalid for: " + entry.labels.city)
+      add_to_email("Schema url invalid for: " + entry.labels.city)
       continue
     }
 
     const datasets = entry.data.datasets || {}
 
-    if (Object.keys(datasets).length == 0)
-      console.log("No datasets for: " + entry.url)
+    if (Object.keys(datasets).length == 0) {
+      console.log("No datasets for: " + entry.labels.city)
+      add_to_email("No datasets for: " + entry.labels.city)
+      continue
+    }
+
 
     for (const [datasetKey, datasetObj] of Object.entries(datasets)) {
       const datasetUrl = datasetObj.url || {};
@@ -58,13 +96,18 @@ const validateEntries = async (entries) => {
         dataset = await fetchUrlData(datasetUrl, "dataset")
       } catch (err) {
         console.log("Dataset url invalid for: " + entry.url)
+        add_to_email("Dataset url invalid for: " + entry.labels.city)
         continue
       }
 
       const filters = datasetObj.filters || {};
 
-      if (Object.keys(filters).length == 0)
-        console.log("No filter for: " + entry.url)
+      if (Object.keys(filters).length == 0) {
+        console.log("No filters for: " + url)
+        add_to_email("No filters for: " + entry.labels.city)
+        continue
+      }
+
 
       for (const [filterKey, filterUrl] of Object.entries(filters)) {
         let filter
@@ -74,6 +117,7 @@ const validateEntries = async (entries) => {
           filterFunc = Function(filter)()
         } catch (err) {
           console.log("Filter url invalid for: " + url)
+          add_to_email("Filter url invalid for: " + entry.labels.city)
           continue
         }
         console.log("VALID ENTRY: " + url)
@@ -96,12 +140,15 @@ const validateEntries = async (entries) => {
           filterObj.correctness = correctness
 
         } else {
+          add_to_email("Filter is invalid for: " + entry.labels.city)
           console.log("No validation result.")
         }
-        console.log('')
       }
     }
+
   }
+  if (invalid_entry_count > 0)
+    send_notification()
   return result
 }
 
