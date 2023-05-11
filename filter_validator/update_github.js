@@ -15,14 +15,20 @@ const updateFile = (new_content) => {
       .then((data) => {
           const content = Buffer.from(data.content, 'base64').toString();
           const sha = data.sha;
-
-          const [updated_urls, new_file_content] = _generate_new_file_content(content, new_content)
+          
+          let updated_urls, new_file_content
+          try {   
+            [updated_urls, new_file_content] = _generate_new_file_content(content, new_content)
+          } catch (err) { 
+            console.error(`Error generating new file content for ${file_path}`, err)
+            return
+          }
 
           if (new_file_content) {
               const new_file_content_str = JSON.stringify(new_file_content, null, 2);
               const new_file_content_base64 = Buffer.from(new_file_content_str).toString('base64');
 
-              const message = `Updated the following entries in metadata.json: ${updated_urls.join(", ")}`;
+              const message = `Updated the following entries in ${file_path}: ${updated_urls.join(", ")}`;
       
               fetch(url, {
                   method: 'PUT',

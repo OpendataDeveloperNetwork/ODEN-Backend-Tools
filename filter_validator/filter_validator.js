@@ -108,18 +108,21 @@ const validateEntries = async (entries) => {
         ] = validateFilter(filterFunc, dataset, schema, stdLibFunc) || []
 
         if (conformSchema !== undefined) {
-          const schemaObj = result[url] = result[url] || {
-            conformSchema: true,
-            datasets: {}
-          }
-          const datasetObj = schemaObj.datasets[datasetKey] = schemaObj.datasets[datasetKey] || {
-            filters: {}
-          }
-          const filterObj = datasetObj.filters[filterKey] = datasetObj.filters[filterKey] || {}
+          if (correctness < 1) {
+            const schemaObj = result[url] = result[url] || {
+              conformSchema: true,
+              datasets: {}
+            }
+            const datasetObj = schemaObj.datasets[datasetKey] = schemaObj.datasets[datasetKey] || {
+              filters: {}
+            }
+            const filterObj = datasetObj.filters[filterKey] = datasetObj.filters[filterKey] || {}
 
-          schemaObj.conformSchema = !schemaObj.conformSchema || conformSchema
-          filterObj.correctness = correctness
-
+            schemaObj.conformSchema = !schemaObj.conformSchema || conformSchema
+            filterObj.correctness = correctness
+          } else {
+            console.log("Filter has 100% correctness.")
+          }
         } else {
           add_to_email("Filter is invalid for: ", entry)
           console.log("No validation result for " + url)
@@ -155,15 +158,19 @@ const validateFilter = (filter, dataset, schema, stdLib) => {
   const v = new validator();
 
   try {
-    const {
-      data = [], errors = []
-    } = filter(dataset, {schema:schema, library:stdLib, JSONvalidator: v}) || {}
+    const { data, errors } = filter(dataset, {
+      schema: schema,
+      library: stdLib,
+      JSONvalidator: v,
+    });
 
     // update needed only when errors are returned
     if (errors.length > 0) {
       const conformSchema = !errors.some(error => error.type === 'validation')
       const correctness = Math.round((data.length / (data.length + errors.length)) * 1000) / 1000
       return [conformSchema, correctness]
+    } else if (data.length > 0) {
+      return [true, 1]
     }
   } catch (err) {
     console.log("Filter is invalid with the following error: " + err)
