@@ -151,9 +151,9 @@ const validateEntries = async (entries) => {
     }
 
   }
-  if (invalid_entry_count > 0)
-    send_notification()
-  // console.log(email_message)
+  // if (invalid_entry_count > 0)
+  //   send_notification()
+  console.log(email_message)
 
   
   return result
