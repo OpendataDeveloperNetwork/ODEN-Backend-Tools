@@ -78,7 +78,7 @@ const validateEntries = async (entries) => {
     try {
       schema = await fetchUrlData(schemaUrl, "schema")
     } catch (err) {
-      console.log("Schema url invalid for: " + entry.url)
+      console.log("Schema url invalid for: " + url)
       add_to_email("Schema url invalid for: ", entry)
       continue
     }
@@ -86,7 +86,7 @@ const validateEntries = async (entries) => {
     const datasets = entry.data.datasets || {}
 
     if (Object.keys(datasets).length == 0) {
-      console.log("No datasets for: " + entry.url)
+      console.log("No datasets for: " + url)
       add_to_email("No datasets for: " + entry)
       continue
     }
@@ -99,7 +99,7 @@ const validateEntries = async (entries) => {
       try {
         dataset = await fetchUrlData(datasetUrl, "dataset")
       } catch (err) {
-        console.log("Dataset url invalid for: " + entry.url)
+        console.log("Dataset url invalid for: " + url)
         add_to_email("Dataset url invalid for: ", entry)
         continue
       }
