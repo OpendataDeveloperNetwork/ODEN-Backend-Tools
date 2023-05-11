@@ -47,9 +47,15 @@ const send_notification = async () => {
 }
 
 
-const add_to_email = (message) => {
+const add_to_email = (message, entry) => {
+  const labels = entry.labels
   invalid_entry_count++
-  email_message += invalid_entry_count + '. ' + message + '<br>'
+  city = labels.city || "<i>City missing</i>";
+  region = labels.region || "<i>Region missing</i>";
+  country = labels.country || "<i>Country missing</i>";
+
+  email_message += `${invalid_entry_count}.${message} ${city}, ${region}, ${country}<br>`
+  // email_message += `${invalid_entry_count}. ${message} <a href = "${entry.url}">Link</a><br>`
 
 }
 
@@ -72,15 +78,15 @@ const validateEntries = async (entries) => {
     try {
       schema = await fetchUrlData(schemaUrl, "schema")
     } catch (err) {
-      console.log("Schema url invalid for: " + entry.url)
-      add_to_email("Schema url invalid for: " + entry.labels.city)
+      console.log("Schema url invalid for: " + entry.labels.city)
+      add_to_email("Schema url invalid for: ", entry)
       continue
     }
 
     const datasets = entry.data.datasets || {}
 
     if (Object.keys(datasets).length == 0) {
-      console.log("No datasets for: " + entry.url)
+      console.log("No datasets for: " + entry.labels.city)
       add_to_email("No datasets for: " + entry.labels.city)
       continue
     }
@@ -94,7 +100,7 @@ const validateEntries = async (entries) => {
         dataset = await fetchUrlData(datasetUrl, "dataset")
       } catch (err) {
         console.log("Dataset url invalid for: " + entry.url)
-        add_to_email("Dataset url invalid for: " + entry.labels.city)
+        add_to_email("Dataset url invalid for: ", entry)
         continue
       }
 
@@ -102,7 +108,7 @@ const validateEntries = async (entries) => {
 
       if (Object.keys(filters).length == 0) {
         console.log("No filters for: " + url)
-        add_to_email("No filters for: " + entry.labels.city)
+        add_to_email("No filters for: ", entry)
         continue
       }
 
@@ -115,7 +121,7 @@ const validateEntries = async (entries) => {
           filterFunc = Function(filter)()
         } catch (err) {
           console.log("Filter url invalid for: " + url)
-          add_to_email("Filter url invalid for: " + entry.labels.city)
+          add_to_email("Filter url invalid for: ", entry)
           continue
         }
         console.log("VALID ENTRY: " + url)
@@ -138,7 +144,7 @@ const validateEntries = async (entries) => {
           filterObj.correctness = correctness
 
         } else {
-          add_to_email("Filter is invalid for: " + entry.labels.city)
+          add_to_email("Filter is invalid for: ", entry)
           console.log("No validation result for " + url)
         }
       }
@@ -146,8 +152,9 @@ const validateEntries = async (entries) => {
 
   }
   // if (invalid_entry_count > 0)
-    // send_notification()
-  console.log(email_message)
+  //   send_notification()
+  console.log(entries.length)
+
   
   return result
 }
@@ -211,14 +218,14 @@ const get_std_lib_func = async () => {
 
 // Data from data.json file in client
 // const entries_from_data_json = null
-// get_entries()
-//   .then((entries_from_data_json) => {
-//     validateEntries(entries_from_data_json)
-//   })
-//   .catch((error) => {
-//     console.error(error);
-//   });
+get_entries()
+  .then((entries_from_data_json) => {
+    test_update(entries_from_data_json)
+  })
+  .catch((error) => {
+    console.error(error);
+  });
 
 // Data from hardcoded test entries
 // validateEntries(test_entries)
-test_update(test_data)
+// test_update(test_data)
