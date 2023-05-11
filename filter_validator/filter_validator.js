@@ -54,7 +54,7 @@ const add_to_email = (message, entry) => {
   region = labels.region || "<i>Region missing</i>";
   country = labels.country || "<i>Country missing</i>";
 
-  email_message += `${invalid_entry_count}.${message} ${city}, ${region}, ${country}<br>`
+  email_message += `${invalid_entry_count}. ${message}${city}, ${region}, ${country}<br>`
   // email_message += `${invalid_entry_count}. ${message} <a href = "${entry.url}">Link</a><br>`
 
 }
@@ -86,8 +86,8 @@ const validateEntries = async (entries) => {
     const datasets = entry.data.datasets || {}
 
     if (Object.keys(datasets).length == 0) {
-      console.log("No datasets for: " + url)
-      add_to_email("No datasets for: " + entry)
+      console.log("No datasets for: " + entry.labels.city)
+      add_to_email("No datasets for: ", entry)
       continue
     }
 
@@ -151,9 +151,9 @@ const validateEntries = async (entries) => {
     }
 
   }
-  // if (invalid_entry_count > 0)
-  //   send_notification()
-  console.log(entries.length)
+  if (invalid_entry_count > 0)
+    send_notification()
+  // console.log(email_message)
 
   
   return result
