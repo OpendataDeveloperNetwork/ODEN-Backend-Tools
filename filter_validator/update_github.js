@@ -1,8 +1,6 @@
 const dotenv = require('dotenv');
 
-dotenv.config(); // For the .env file
-
-const test_data = require('./test_data.js').test_metadata
+dotenv.config();
 
 const updateFile = (new_content) => {
   const owner = 'OpendataDeveloperNetwork';
@@ -11,7 +9,7 @@ const updateFile = (new_content) => {
   
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${file_path}`;
   
-  // Get the data
+  // Get the metadata.json from client repo
   fetch(url)
       .then((res) => res.json())
       .then((data) => {
@@ -24,7 +22,6 @@ const updateFile = (new_content) => {
               const new_file_content_str = JSON.stringify(new_file_content, null, 2);
               const new_file_content_base64 = Buffer.from(new_file_content_str).toString('base64');
 
-              //TODO: add identifiers of each updated entry in commit message
               const message = `Updated the following entries in metadata.json: ${updated_urls.join(", ")}`;
       
               fetch(url, {
@@ -56,19 +53,12 @@ const updateFile = (new_content) => {
       });
 }
 
-// updateFile({})
-
 const _generate_new_file_content = (content, new_content) => {
   const data_arr = JSON.parse(content)
-            
-  // const data_arr = test_data
-  // console.log(data_arr)
 
   const metadata_map = new Map(
     data_arr.map(data => [data.url, data])
   )
-  // console.log(metadata_map.get("https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art").data.datasets)
-  // console.log(metadata_map)
 
   // file update is needed if any data entry in metadata.json has a different conformSchema or correctness value
   let is_file_update_needed = false
@@ -100,12 +90,10 @@ const _generate_new_file_content = (content, new_content) => {
     }
   })
 
-  // console.log(metadata_map.get("https://data-cityofpg.opendata.arcgis.com/maps/CityofPG::public-art").data.datasets)
-  // console.log(is_update_needed, metadata_map)
-
   return is_file_update_needed ? [updated_entries_urls, [...metadata_map.values()]] : [];
 }
 
+// entries update is needed when conformSchema or correctness value is different
 const _check_is_update_needed = (existing_data, new_data) => {
   if (new_data.conformSchema !== existing_data.conformSchema) {
     return true

@@ -1,28 +1,6 @@
-const {
-  default: axios
-} = require("axios");
-
+const { default: axios } = require("axios")
 const validator = require('jsonschema').Validator
-
-const updateFile = require('./update_github').updateFile;
-
-const test_data = require('./test_data.js').test_entries
-
-// Goal for tomorrow:
-// TODO: Loop through each object and ensure the schema, dataset, and filter fields exist (log if they do or dont)
-// TODO: Fetch the schema, filter, and data from the urls, and ensure they are valid (check to make sure the dataset is json or not ...)
-
-
-const test_update = async (test_entries) => {
-  get_entries().then(async entries => {
-    const validation = await validateEntries(entries)
-    if (validation)
-      updateFile(validation)
-  }).catch(err => { 
-    console.log("Error fetching entries from data.json") 
-  })
-}
-
+const updateFile = require('./update_github').updateFile
 
 var email_message = '<p><b>The following filter entries have failed:</b><br><br>'
 var invalid_entry_count = 0
@@ -45,7 +23,6 @@ const send_notification = async () => {
     });
 
 }
-
 
 const add_to_email = (message, entry) => {
   const labels = entry.labels
@@ -154,8 +131,6 @@ const validateEntries = async (entries) => {
   // if (invalid_entry_count > 0)
   //   send_notification()
   console.log(email_message)
-
-  
   return result
 }
 
@@ -217,15 +192,12 @@ const get_std_lib_func = async () => {
 }
 
 // Data from data.json file in client
-// const entries_from_data_json = null
 get_entries()
-  .then((entries_from_data_json) => {
-    test_update(entries_from_data_json)
+  .then(async (entries_from_data_json) => {
+    const validation = await validateEntries(entries_from_data_json)
+    if (validation)
+      updateFile(validation)
   })
   .catch((error) => {
     console.error(error);
   });
-
-// Data from hardcoded test entries
-// validateEntries(test_entries)
-// test_update(test_data)
