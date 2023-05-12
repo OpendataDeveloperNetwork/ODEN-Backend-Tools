@@ -24,14 +24,55 @@ const send_notification = async () => {
 
 }
 
+/**
+ * Removes the protocol from the url
+ * @param {string} url URL to remove the protocol from
+ * @returns New url without the protocol (i.e. https://www.google.com -> www.google.com)
+ */
+function remove_url_protocol(url) {
+  // check if the url passed in is an array
+  if (Array.isArray(url)) {
+    const urlsWithoutProtocol = url.map((url) => {
+      return url.replace(/^https?:\/\//i, '');
+    });
+    return urlsWithoutProtocol;
+  }
+  return url.replace(/^https?:\/\//i, '');
+}
+
+// function removeTopLevelDomain(url) {
+//   const domainRegex = /^(https?:\/\/)?([^\/]+)/i;
+//   const match = url.match(domainRegex);
+//   if (match && match[2]) {
+//     const domain = match[2];
+//     const parts = domain.split('.');
+//     if (parts.length >= 2) {
+//       parts.pop();
+//       return url.replace(domain, parts.join('.'));
+//     }
+//   }
+//   return url;
+// }
+
+function addSpaceBeforeTLD(url) {
+  return url.replace(/(\.[a-z]+)(\/|$)/gi, ' $1$2');
+}
+
+
+
 const add_to_email = (message, entry) => {
   const labels = entry.labels
   invalid_entry_count++
   city = labels.city || "<i>City missing</i>";
   region = labels.region || "<i>Region missing</i>";
   country = labels.country || "<i>Country missing</i>";
+  category = labels.category || "<i>Category missing</i>";
+  const url = remove_url_protocol(entry.url)
+  const Modifiedurl = addSpaceBeforeTLD(url)
 
-  email_message += `${invalid_entry_count}. ${message}${city}, ${region}, ${country}<br>`
+  email_message += `${invalid_entry_count}. ${message}${Modifiedurl}<br>`
+  // email_message += `${invalid_entry_count}. ${message}${city}, ${region}, ${country}, Category: ${category}<br>`
+  // { firstHalf }&#65279;${ secondHalf } <br>`
   // email_message += `${invalid_entry_count}. ${message} <a href = "${entry.url}">Link</a><br>`
 
 }
@@ -131,8 +172,8 @@ const validateEntries = async (entries) => {
     }
 
   }
-  // if (invalid_entry_count > 0)
-  //   send_notification()
+  if (invalid_entry_count > 0)
+    send_notification()
   console.log(email_message)
   return result
 }
