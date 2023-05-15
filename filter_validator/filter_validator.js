@@ -77,6 +77,7 @@ const add_to_email = (message, entry) => {
 
 }
 
+// Validate each filter embedded in each data entry with its dataset and schema.
 const validateEntries = async (entries) => {
 
   const stdLibFunc = await get_std_lib_func()
@@ -186,6 +187,7 @@ const fetchUrlData = async (urlParam, type) => {
     responseType: 'blob',
   })
 
+  // schemas, datasets are expected to be in json/geosjon format; filters are expected to be a js file
   if (["schema", "dataset"].includes(type) && !(res.headers.get("Content-Type").includes('application/json') || urlParam.endsWith("json"))) {
     throw Error
   } else if (type == "filter" && !(res.headers.get("Content-Type").includes('text/plain') || urlParam.endsWith(".js"))) {
