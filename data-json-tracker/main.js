@@ -31,7 +31,25 @@ function remove_url_protocol(url) {
  * @returns New string without the html tags
  */
 function remove_html_from_string(str) {
-  return str.replace(/<\/?[^>]+(>|$)/g, "");
+  return str.replace(/<\/?[^>]+(>|$)|\.\w+$/g, "");
+}
+
+/**
+ * Encodes the urls in the string
+ * @param {string} str String to encode the urls in
+ * @returns New string with the encoded urls
+ */
+async function encodeUrls(str) {
+  const urlRegex = /((?:https?|ftp):\/\/[^\s/$.?#].[^\s]*)|([a-zA-Z0-9]+\.[a-zA-Z0-9]+\.[a-zA-Z0-9]+)/gi;
+  return str.replace(urlRegex, (match, url, hostname) => {
+    if (url) {
+      return encodeURIComponent(url);
+    } else if (hostname) {
+      return encodeURIComponent(`http://${hostname}`);
+    } else {
+      return match;
+    }
+  });
 }
 
 /**
@@ -84,7 +102,7 @@ async function downloadFiles(link) {
     return true;
   } catch (error) {
     console.error(`Error downloading files: ${error.message}`);
-    outstanding_errors.push(error.message);
+    outstanding_errors.push(await encodeUrls(error.message));
     return false;
   }
 }
@@ -148,7 +166,7 @@ async function parse_data_json(data_json_list) {
       }
     } catch (error) {
       console.error(`Error parsing data.json/finding file: ${error.message}`);
-      outstanding_errors.push(error.message);
+      outstanding_errors.push(await encodeUrls(error.message));
     }
   }
 
@@ -171,23 +189,24 @@ async function compare_fields(data_json_url, data_json, file_data, changes) {
     }
 
     for (let i = 0; i < data_json.dataset.length; i++) {
+      const timestamp = new Date().toISOString();
       // Search for the title in the file_data
       const title = data_json.dataset[i].title;
       const description = data_json.dataset[i].description;
       const landingPage = data_json.dataset[i].landingPage;
 
-      const title_index = file_data[filename].findIndex(x => x.title === title);
-      const description_index = file_data[filename].findIndex(x => (x.description ?? '') === (description ?? ''));
-      const landingpage_index = file_data[filename].findIndex(x => x.landingPage === landingPage);
+      const title_index = file_data[filename].findIndex(x => x.title == title);
+      const description_index = file_data[filename].findIndex(x => (x.description ?? '') == (description ?? ''));
+      const landingpage_index = file_data[filename].findIndex(x => x.landingPage == landingPage);
 
       if (title_index === -1) {
-        changes[filename].push({ title: title, missing: 'title' });
+        changes[filename].push({ timestamp: timestamp, title: title, missing: 'title' });
       }
       if (description_index === -1) {
-        changes[filename].push({ title: title, description: cutStringToMaxWords(data_json.dataset[i].description ?? '', 15), missing: 'description' });
+        changes[filename].push({ timestamp: timestamp, title: title, description: cutStringToMaxWords(data_json.dataset[i].description ?? '', 15), missing: 'description' });
       }
       if (landingpage_index === -1) {
-        changes[filename].push({ title: title, landingPage: data_json.dataset[i].landingPage, missing: 'landing page' });
+        changes[filename].push({ timestamp: timestamp, title: title, landingPage: encodeURIComponent(data_json.dataset[i].landingPage), missing: 'landing page' });
       }
     }
     if (changes[filename].length > 0) {
@@ -222,7 +241,7 @@ async function compare_data(data_json_list, file_data) {
       }
     } catch (error) {
       error.message = `Error fetching data.json: ${error.message}`;
-      outstanding_errors.push(error.message);
+      outstanding_errors.push(await encodeUrls(error.message));
     }
   }));
   return changes;
@@ -268,14 +287,22 @@ async function generateHtmlTable(changes) {
       const missing = change.missing ?? '';
       const landingPage = remove_html_from_string(change.landingPage ?? '');
 
-      const timestamp = dataset.timestamp;
-
+      const timestamp = change.timestamp;
       html += `<tr><td>${timestamp}</td><td>${dataset}</td><td>${missing}</td><td>${title}</td><td>${description}</td><td>${landingPage}</td></tr>`;
     }
   }
 
   html += '</tbody></table><div>';
 
+  return html;
+}
+
+async function generateErrorsTable() {
+  let html = '<div><table><thead><tr><th>Errors</th></tr></thead><tbody>';
+  outstanding_errors.map(error => {
+    html += `<tr><td>${error}</td></tr>`;
+  })
+  html += '</tbody></table><div>';
   return html;
 }
 
@@ -318,10 +345,11 @@ async function main() {
     const file_data = await parse_data_json(data_json_list);
     const changes = await compare_data(data_json_list, file_data);
     await log_changes(changes)
-    const html = await generateHtmlTable(changes);
+    const valid_changes = await generateHtmlTable(changes);
+    const errors = await generateErrorsTable();
     console.log('\n');
-    console.log(html);
-    // await send_report_to_admins(html);
+    console.log(valid_changes + errors);
+    // await send_report_to_admins(valid_changes + errors);
   }
 }
 
