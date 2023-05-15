@@ -3,6 +3,7 @@ import { join } from 'path';
 import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import axios from 'axios';
 
 dotenv.config();
 
@@ -24,11 +25,21 @@ function remove_url_protocol(url) {
   return url.replace(/^https?:\/\//i, '');
 }
 
-
+/**
+ * Removes the html tags from the string
+ * @param {string} str String to remove the html tags from
+ * @returns New string without the html tags
+ */
 function remove_html_from_string(str) {
   return str.replace(/<\/?[^>]+(>|$)/g, "");
 }
 
+/**
+ * Cuts the string to the max number of words
+ * @param {string} str String to operate on
+ * @param {number} maxWords Max number of words to cut the string to
+ * @returns New string with the max number of words
+ */
 function cutStringToMaxWords(str, maxWords = 15) {
   const words = str.split(" ");
   if (words.length > maxWords) {
@@ -166,7 +177,7 @@ async function compare_fields(data_json_url, data_json, file_data, changes) {
       const landingPage = data_json.dataset[i].landingPage;
 
       const title_index = file_data[filename].findIndex(x => x.title === title);
-      const description_index = file_data[filename].findIndex(x => x.description === description);
+      const description_index = file_data[filename].findIndex(x => (x.description ?? '') === (description ?? ''));
       const landingpage_index = file_data[filename].findIndex(x => x.landingPage === landingPage);
 
       if (title_index === -1) {
@@ -230,7 +241,7 @@ async function log_changes(changes) {
       timestamp,
       changes: changesArray.reduce((obj, [key, value]) => ({ ...obj, [key]: value }), {})
     };
-    fs.appendFile('log.txt', JSON.stringify(log) + '\n', (err) => {
+    fs.appendFileSync(process.env.LOG_FILE_NAME, JSON.stringify(log) + '\n', (err) => {
       if (err) {
         outstanding_errors.push(err);
       }
@@ -238,36 +249,54 @@ async function log_changes(changes) {
     });
   }
   if (outstanding_errors.length > 0) {
-    fs.appendFile('log.txt', JSON.stringify(outstanding_errors) + '\n', (err) => {
+    fs.appendFileSync(process.env.LOG_FILE_NAME, JSON.stringify(outstanding_errors) + '\n', (err) => {
       if (err) {
         outstanding_errors.push(err);
       }
-      console.log('Changes logged to log.txt');
+      console.log('Errors logged to log.txt');
     });
   }
 }
 
-function generateHtmlTable(changes) {
-  let html = '<table><thead><tr><th>Timestamp</th><th>Dataset</th><th>Title</th><th>Description</th><th>Missing</th><th>Landing Page</th></tr></thead><tbody>';
+async function generateHtmlTable(changes) {
+  let html = '<div><table><thead><tr><th>Timestamp</th><th>Dataset</th><th>Missing</th><th>Title</th><th>Description</th><th>Landing Page</th></tr></thead><tbody>';
 
   for (const [dataset, datasetChanges] of Object.entries(changes)) {
     for (const change of datasetChanges) {
       const title = remove_html_from_string(change.title ?? '');
       const description = remove_html_from_string(change.description ?? '');
-      const missing = change.missing ?? false;
+      const missing = change.missing ?? '';
       const landingPage = remove_html_from_string(change.landingPage ?? '');
 
-      const timestamp = new Date(change.timestamp).toLocaleString();
+      const timestamp = dataset.timestamp;
 
-      html += `<tr><td>${timestamp}</td><td>${dataset}</td><td>${title}</td><td>${description}</td><td>${missing}</td><td>${landingPage}</td></tr>`;
+      html += `<tr><td>${timestamp}</td><td>${dataset}</td><td>${missing}</td><td>${title}</td><td>${description}</td><td>${landingPage}</td></tr>`;
     }
   }
 
-  html += '</tbody></table>';
+  html += '</tbody></table><div>';
 
   return html;
 }
 
+// function send_report_to_admins(html) {
+//   const requestBody = {
+//     subject: 'Notification: Data.json Changes',
+//     message: html
+//   };
+//   axios.post('https://terratap-oden-client-v2.web.app/notifyAdmins', requestBody)
+//     .then((response) => {
+//       console.log(response.data);
+//     })
+//     .catch((error) => {
+//       console.error(error);
+//     });
+// }
+
+/**
+ * Fetches the data.json files from the list of data.json files
+ * @returns List of data.json files
+ */
 async function get_data_json_list() {
   try {
     const response = await fetch(process.env.DATA_JSON_LIST_URL);
@@ -289,8 +318,10 @@ async function main() {
     const file_data = await parse_data_json(data_json_list);
     const changes = await compare_data(data_json_list, file_data);
     await log_changes(changes)
-    const html = generateHtmlTable(changes);
+    const html = await generateHtmlTable(changes);
+    console.log('\n');
     console.log(html);
+    // await send_report_to_admins(html);
   }
 }
 
