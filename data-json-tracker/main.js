@@ -307,7 +307,7 @@ async function generateHtmlTable(changes) {
  * @returns {string} HTML table
 */
 async function generateErrorsTable() {
-  let html = '<div><table><thead><tr><th>Errors</th></tr></thead><tbody>';
+  let html = '<div style="text-align:center"><table><thead><tr><th>Errors</th></tr></thead><tbody>';
   outstanding_errors.map(error => {
     html += `<tr><td>${error}</td></tr>`;
   })
@@ -321,7 +321,6 @@ async function generateErrorsTable() {
  */
 async function send_report_to_admins(html) {
   const reqBody = {
-    messageType: 'html',
     subject: 'Notification: Data.json Changes',
     message: html
   };
