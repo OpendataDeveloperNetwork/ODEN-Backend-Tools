@@ -1,6 +1,9 @@
 const { default: axios } = require("axios")
 const validator = require('jsonschema').Validator
 const updateFile = require('./update_github').updateFile
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 var email_message = '<p><b>The following filter entries have failed:</b><br><br>'
 var invalid_entry_count = 0
@@ -12,8 +15,9 @@ const send_notification = async () => {
     subject: 'Notification: Invalid Entries',
     message: email_message
   };
+  console.log(process.env.NOTIFICATION_URL)
 
-  axios.post('http://localhost:8080/notifyAdmins', requestBody)
+  axios.post(process.env.NOTIFICATION_URL.toString(), requestBody)
     .then((response) => {
       console.log("Successfully sent email notification to admin : ", response.data);
     })
