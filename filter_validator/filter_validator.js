@@ -46,12 +46,7 @@ function addSpaceBeforeTLD(url) {
 
 
 const add_to_email = (message, entry) => {
-  const labels = entry.labels
   invalid_entry_count++
-  city = labels.city || "<i>City missing</i>";
-  region = labels.region || "<i>Region missing</i>";
-  country = labels.country || "<i>Country missing</i>";
-  category = labels.category || "<i>Category missing</i>";
   const url = remove_url_protocol(entry.url)
   const Modifiedurl = addSpaceBeforeTLD(url)
 
