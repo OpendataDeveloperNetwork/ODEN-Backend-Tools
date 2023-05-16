@@ -306,19 +306,19 @@ async function generateErrorsTable() {
   return html;
 }
 
-// function send_report_to_admins(html) {
-//   const requestBody = {
-//     subject: 'Notification: Data.json Changes',
-//     message: html
-//   };
-//   axios.post('https://terratap-oden-client-v2.web.app/notifyAdmins', requestBody)
-//     .then((response) => {
-//       console.log(response.data);
-//     })
-//     .catch((error) => {
-//       console.error(error);
-//     });
-// }
+async function send_report_to_admins(html) {
+  const requestBody = {
+    subject: 'Notification: Data.json Changes',
+    message: html
+  };
+  axios.post(process.env.NOTIFICATION_URL, requestBody)
+    .then((response) => {
+      console.log(response.data);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+}
 
 /**
  * Fetches the data.json files from the list of data.json files
@@ -349,7 +349,7 @@ async function main() {
     const errors = await generateErrorsTable();
     console.log('\n');
     console.log(valid_changes + errors);
-    // await send_report_to_admins(valid_changes + errors);
+    await send_report_to_admins(valid_changes + errors);
   }
 }
 
