@@ -15,7 +15,6 @@ const send_notification = async () => {
     subject: 'Notification: Invalid Entries',
     message: email_message
   };
-  console.log(process.env.NOTIFICATION_URL)
 
   axios.post(process.env.NOTIFICATION_URL.toString(), requestBody)
     .then((response) => {
