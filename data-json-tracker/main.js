@@ -278,7 +278,7 @@ async function log_changes(changes) {
 }
 
 async function generateHtmlTable(changes) {
-  let html = '<div><table><thead><tr><th>Timestamp</th><th>Dataset</th><th>Missing</th><th>Title</th><th>Description</th><th>Landing Page</th></tr></thead><tbody>';
+  let html = '<div style="text-align:center"><table><thead><tr><th>Timestamp</th><th>Dataset</th><th>Missing</th><th>Title</th><th>Description</th><th>Landing Page</th></tr></thead><tbody>';
 
   for (const [dataset, datasetChanges] of Object.entries(changes)) {
     for (const change of datasetChanges) {
