@@ -7,7 +7,6 @@ var invalid_entry_count = 0
 
 const send_notification = async () => {
   email_message += "</p>"
-  console.log(email_message)
 
   const requestBody = {
     subject: 'Notification: Invalid Entries',
@@ -16,10 +15,10 @@ const send_notification = async () => {
 
   axios.post('http://localhost:8080/notifyAdmins', requestBody)
     .then((response) => {
-      console.log(response.data);
+      console.log("Successfully sent email notification to admin : ", response.data);
     })
     .catch((error) => {
-      console.error(error);
+      console.error("Failed to send email notification to admin : ", error);
     });
 
 }
@@ -40,24 +39,10 @@ function remove_url_protocol(url) {
   return url.replace(/^https?:\/\//i, '');
 }
 
-// function removeTopLevelDomain(url) {
-//   const domainRegex = /^(https?:\/\/)?([^\/]+)/i;
-//   const match = url.match(domainRegex);
-//   if (match && match[2]) {
-//     const domain = match[2];
-//     const parts = domain.split('.');
-//     if (parts.length >= 2) {
-//       parts.pop();
-//       return url.replace(domain, parts.join('.'));
-//     }
-//   }
-//   return url;
-// }
 
 function addSpaceBeforeTLD(url) {
   return url.replace(/(\.[a-z]+)(\/|$)/gi, ' $1$2');
 }
-
 
 
 const add_to_email = (message, entry) => {
@@ -71,10 +56,6 @@ const add_to_email = (message, entry) => {
   const Modifiedurl = addSpaceBeforeTLD(url)
 
   email_message += `${invalid_entry_count}. ${message}${Modifiedurl}<br>`
-  // email_message += `${invalid_entry_count}. ${message}${city}, ${region}, ${country}, Category: ${category}<br>`
-  // { firstHalf }&#65279;${ secondHalf } <br>`
-  // email_message += `${invalid_entry_count}. ${message} <a href = "${entry.url}">Link</a><br>`
-
 }
 
 // Validate each filter embedded in each data entry with its dataset and schema.
@@ -175,7 +156,7 @@ const validateEntries = async (entries) => {
   }
   if (invalid_entry_count > 0)
     send_notification()
-  console.log(email_message)
+    
   return result
 }
 
