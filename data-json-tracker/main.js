@@ -277,6 +277,11 @@ async function log_changes(changes) {
   }
 }
 
+/**
+ * Generates the HTML table for the email
+ * @param {JSON} changes JSON object with the filename as the key and the title, description, and landing page as the value
+ * @returns {string} HTML table
+ */
 async function generateHtmlTable(changes) {
   let html = '<div style="text-align:center"><table><thead><tr><th>Timestamp</th><th>Dataset</th><th>Missing</th><th>Title</th><th>Description</th><th>Landing Page</th></tr></thead><tbody>';
 
@@ -297,6 +302,10 @@ async function generateHtmlTable(changes) {
   return html;
 }
 
+/**
+ * Generates the HTML table for the errors
+ * @returns {string} HTML table
+*/
 async function generateErrorsTable() {
   let html = '<div><table><thead><tr><th>Errors</th></tr></thead><tbody>';
   outstanding_errors.map(error => {
@@ -306,12 +315,17 @@ async function generateErrorsTable() {
   return html;
 }
 
+/**
+ * Sends the overall report to the admins
+ * @param {*} html Report in HTML format
+ */
 async function send_report_to_admins(html) {
-  const requestBody = {
+  const reqBody = {
+    messageType: 'html',
     subject: 'Notification: Data.json Changes',
     message: html
   };
-  axios.post(process.env.NOTIFICATION_URL, requestBody)
+  axios.post(process.env.NOTIFICATION_URL, reqBody)
     .then((response) => {
       console.log(response.data);
     })
