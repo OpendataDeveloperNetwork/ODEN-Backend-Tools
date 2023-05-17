@@ -46,6 +46,7 @@ async function update_metadata(data_json, metadata_json) {
             await update_categorized(data_obj, metadata_obj);
             await update_landing404d(data_obj, metadata_obj);
             await update_isFilterable(metadata_obj);
+            await update_schema404d(data_obj.data, metadata_obj.data);
             if (metadata_obj.labels.isFilterable) {
                 await update_datasets_url404d(data_obj.data.datasets, metadata_obj.data.datasets);
             } else {
@@ -130,6 +131,32 @@ async function isDatasetsEmpty(jsonObj) {
         }
     }
     return true;
+}
+
+/**
+ * Check the schema link and update the metadata schema404d field appropriately.
+ * @param {JSONObject} data_data the entry.data
+ * @param {JSONObject} metadata_data the metadata.data
+ */
+async function update_schema404d(data_data, metadata_data) {
+    console.log("Checking schema URL...");
+    if (data_data.schema.length) {
+        try {
+            const response = await axios.get(data_data.schema);
+            if (response.status === 404) {
+                metadata_data.schema404d = true;
+            } else {
+                metadata_data.schema404d = false;
+            }
+        } catch (err) {
+            metadata_data.schema404d = true;
+            console.log(`\n\t-- Error: An error occurred accessing the schema URL --\n`);
+        }
+        console.log(`\tSchema 404'd state: ${metadata_data.schema404d}`);
+    } else {
+        metadata_data.schema404d = true;
+        console.log(`\tNo schema link found. Schema 404'd state: true`);
+    }
 }
 
 /**
