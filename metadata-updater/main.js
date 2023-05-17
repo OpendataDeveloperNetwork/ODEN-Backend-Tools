@@ -39,10 +39,9 @@ async function get_metadata_json() {
  * @returns New metadata.json file
  */
 async function update_metadata(data_json, metadata_json) {
-    for (let i = 0; i < data_json.length; i++) {
-        const data_obj = data_json[i];
+    for (const data_obj of data_json) {
         const metadata_obj = metadata_json.find(obj => obj.url === data_obj.url);
-        console.log(`Updating metadata for entry ${data_obj.url}`);
+        console.log(`----------\nUpdating metadata for entry \'${data_obj.url}\'`);
         if (metadata_obj) {
             await update_categorized(data_obj, metadata_obj);
             await update_landing404d(data_obj, metadata_obj);
@@ -53,6 +52,7 @@ async function update_metadata(data_json, metadata_json) {
                 console.log('No datasets; skipping checking dataset URLs.')
             }
         }
+        console.log(`Entry updated.\n----------`);
     }
     return metadata_json;
 }
@@ -144,7 +144,10 @@ async function update_datasets_url404d(data_obj_datasets, metadata_obj_datasets)
     const dataset_keys = Object.keys(data_obj_datasets);
     if (dataset_keys.length) {
         // For each format, GET the url; set the appropriate 'url404d' metadata boolean appropriately.
-        dataset_keys.forEach(async (dataset_format) => {
+        for (const dataset_format of dataset_keys) {
+            if (metadata_obj_datasets[dataset_format] === undefined) {
+                metadata_obj_datasets[dataset_format] = {};
+            }
             try {
                 const response = await axios.get(data_obj_datasets[dataset_format].url);
                 if (response.status === 404) {
@@ -157,7 +160,7 @@ async function update_datasets_url404d(data_obj_datasets, metadata_obj_datasets)
                 console.log(`\n\t-- Error: An error occurred accessing the dataset URL \'${dataset_format}\': \'${data_obj_datasets[dataset_format].url}\' --\n`);
             }
             console.log(`\tDataset \'${dataset_format}\' URL 404'd state: ${metadata_obj_datasets[dataset_format].url404d}`);
-        });
+        }
     } else {
         console.log("\tNo datasets.");
     }
