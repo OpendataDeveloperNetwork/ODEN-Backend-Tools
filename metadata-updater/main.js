@@ -108,10 +108,8 @@ async function update_isFilterable(metadata_obj) {
     const status = await isDatasetsEmpty(metadata_obj);
     if (status) {
         metadata_obj.labels.isFilterable = false;
-        console.log(`Updated isFilterable to false`);
     } else {
         metadata_obj.labels.isFilterable = true;
-        console.log(`Updated isFilterable to true`);
     }
     console.log(`\tFilterable status set to ${metadata_obj.labels.isFilterable}.`);
 }
