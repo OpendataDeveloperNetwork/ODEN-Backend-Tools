@@ -3,7 +3,14 @@ import axios from 'axios';
 
 dotenv.config();
 
-var outstanding_errors = [];
+async function main() {
+    const data_json = await get_data_json();
+    const metadata_json = await get_metadata_json();
+    const new_metadata = await update_metadata(data_json, metadata_json);
+    // Overwrite the metadata.json file
+    await push_changes(new_metadata);
+}
+main(); // Run the program.
 
 /**
  * Gets the data.json file from the data.json url
@@ -26,6 +33,31 @@ async function get_metadata_json() {
 }
 
 /**
+ * Compares the data.json file with the metadata.json file
+ * @param {JSON[]} data_json 
+ * @param {JSON[]} metadata_json 
+ * @returns New metadata.json file
+ */
+async function update_metadata(data_json, metadata_json) {
+    for (let i = 0; i < data_json.length; i++) {
+        const data_obj = data_json[i];
+        const metadata_obj = metadata_json.find(obj => obj.url === data_obj.url);
+        console.log(`Updating metadata for entry ${data_obj.url}`);
+        if (metadata_obj) {
+            await check_categorized(data_obj, metadata_obj);
+            await check_for_landing_404(data_obj, metadata_obj);
+            await check_if_dataset_is_filterable(metadata_obj);
+            if (metadata_obj.labels.isFilterable) {
+                await check_dataset_urls(data_obj.data.datasets, metadata_obj.data.datasets);
+            } else {
+                console.log('No datasets; skipping checking dataset URLs.')
+            }
+        }
+    }
+    return metadata_json;
+}
+
+/**
  * Updates the categorized field in the metadata.json file
  * @param {JSON} data_obj Data object from the data.json file
  * @param {JSON} metadata_obj Metadata object from the metadata.json file
@@ -39,19 +71,6 @@ async function check_categorized(data_obj, metadata_obj) {
         metadata_obj.labels.categorized = false;
     }
     console.log(`\tSet categorized to ${metadata_obj.labels.categorized}; Category: ${data_obj.labels.category}`);
-}
-
-/**
- * Gets the url for the a dataset from the dataset object
- * @param {JSON} dataset Field within dataset field in object from the data.json file
- * @returns String of the url; empty string if no url or an error occurs.
- */
-async function getDatasetUrl(dataset) {
-    try {
-        return dataset.url || "";
-    } catch (e) {
-        return "";
-    }
 }
 
 /**
@@ -77,6 +96,40 @@ async function check_for_landing_404(data_obj, metadata_obj) {
     } else {
         console.log(`\n\t-- Error: No landing url located! --\n`)
     }
+}
+
+/**
+ * Checks if the dataset is filterable
+ * @param {JSON} metadata_obj Metadata object from the metadata.json file
+ */
+async function check_if_dataset_is_filterable(metadata_obj) {
+    console.log('Checking if entry is filterable...')
+    const status = await isDatasetsEmpty(metadata_obj);
+    if (status) {
+        metadata_obj.labels.isFilterable = false;
+        console.log(`Updated isFilterable to false`);
+    } else {
+        metadata_obj.labels.isFilterable = true;
+        console.log(`Updated isFilterable to true`);
+    }
+    console.log(`\tFilterable status set to ${metadata_obj.labels.isFilterable}.`);
+}
+
+/**
+ * Checks if the datasets field is empty
+ * @param {JSON} jsonObj JSON object from the metadata.json file
+ * @returns True if datasets is empty, false otherwise
+ */
+async function isDatasetsEmpty(jsonObj) {
+    if (!jsonObj.data.datasets) {
+        return true;
+    }
+    for (let dataset in jsonObj.data.datasets) {
+        if (Object.keys(jsonObj.data.datasets[dataset]).length !== 0) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /**
@@ -110,64 +163,6 @@ async function check_dataset_urls(data_obj_datasets, metadata_obj_datasets) {
     }
 }
 
-/**
- * Checks if the datasets field is empty
- * @param {JSON} jsonObj JSON object from the metadata.json file
- * @returns True if datasets is empty, false otherwise
- */
-async function isDatasetsEmpty(jsonObj) {
-    if (!jsonObj.data.datasets) {
-        return true;
-    }
-    for (let dataset in jsonObj.data.datasets) {
-        if (Object.keys(jsonObj.data.datasets[dataset]).length !== 0) {
-            return false;
-        }
-    }
-    return true;
-}
-
-/**
- * Checks if the dataset is filterable
- * @param {JSON} metadata_obj Metadata object from the metadata.json file
- */
-async function check_if_dataset_is_filterable(metadata_obj) {
-    console.log('Checking if entry is filterable...')
-    const status = await isDatasetsEmpty(metadata_obj);
-    if (status) {
-        metadata_obj.labels.isFilterable = false;
-        console.log(`Updated isFilterable to false`);
-    } else {
-        metadata_obj.labels.isFilterable = true;
-        console.log(`Updated isFilterable to true`);
-    }
-    console.log(`\tFilterable status set to ${metadata_obj.labels.isFilterable}.`);
-}
-
-/**
- * Compares the data.json file with the metadata.json file
- * @param {JSON[]} data_json 
- * @param {JSON[]} metadata_json 
- * @returns New metadata.json file
- */
-async function compare_data(data_json, metadata_json) {
-    for (let i = 0; i < data_json.length; i++) {
-        const data_obj = data_json[i];
-        const metadata_obj = metadata_json.find(obj => obj.url === data_obj.url);
-        console.log(`Updating metadata for entry ${data_obj.url}`);
-        if (metadata_obj) {
-            await check_categorized(data_obj, metadata_obj);
-            await check_for_landing_404(data_obj, metadata_obj);
-            await check_if_dataset_is_filterable(metadata_obj);
-            if (metadata_obj.labels.isFilterable) {
-                await check_dataset_urls(data_obj.data.datasets, metadata_obj.data.datasets);
-            } else {
-                console.log('No datasets; skipping checking dataset URLs.')
-            }
-        }
-    }
-    return metadata_json;
-}
 
 async function push_changes(new_metadata) {
     // const owner = 'OpendataDeveloperNetwork';
@@ -206,13 +201,3 @@ async function push_changes(new_metadata) {
                 });
         })
 }
-
-async function main() {
-    const data_json = await get_data_json();
-    const metadata_json = await get_metadata_json();
-    const new_metadata = await compare_data(data_json, metadata_json);
-    // Overwrite the metadata.json file
-    await push_changes(new_metadata);
-}
-
-main();
