@@ -45,25 +45,24 @@ async function update_categorized(data_obj, metadata_obj) {
 }
 
 /**
- * Gets the url from the data object
- * @param {JSON} obj Object from the data.json file
- * @returns String of the url or empty string
+ * Gets the url for the a dataset from the dataset object
+ * @param {JSON} dataset Field within dataset field in object from the data.json file
+ * @returns String of the url; empty string if no url or an error occurs.
  */
-async function getUrl(obj) {
+async function getDatasetUrl(dataset) {
     try {
-        return obj.data.datasets.json.url || "";
+        return dataset.url || "";
     } catch (e) {
         return "";
     }
 }
 
 /**
- * Checks if the url is a 404
+ * Checks if the landing url is a 404
  * @param {JSON} data_obj Data object from the data.json file
  * @param {JSON} metadata_obj Metadata object from the metadata.json file
  */
-async function check_for_404(data_obj, metadata_obj) {
-    await getUrl(data_obj);
+async function check_for_landing_404(data_obj, metadata_obj) {
     if (data_obj.url !== "") {
         try {
             const response = await axios.get(data_obj.url);
@@ -124,7 +123,7 @@ async function compare_data(data_json, metadata_json) {
         const metadata_obj = metadata_json.find(obj => obj.url === data_obj.url);
         if (metadata_obj) {
             await update_categorized(data_obj, metadata_obj);
-            await check_for_404(data_obj, metadata_obj);
+            await check_for_landing_404(data_obj, metadata_obj);
             await check_if_dataset_is_filterable(metadata_obj);
         }
     }
