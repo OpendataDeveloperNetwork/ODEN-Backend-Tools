@@ -30,18 +30,14 @@ async function get_metadata_json() {
  * @param {JSON} data_obj Data object from the data.json file
  * @param {JSON} metadata_obj Metadata object from the metadata.json file
  */
-async function update_categorized(data_obj, metadata_obj) {
-    console.log(`URL: ${data_obj.url}`);
-    console.log(`Category: ${data_obj.labels.category.length}`);
-    console.log(`Categorized: ${metadata_obj.labels.categorized}`);
+async function check_categorized(data_obj, metadata_obj) {
     // Update the categorized field if length of category is greater than 0
     if (data_obj.labels.category !== "Uncategorized") {
         metadata_obj.labels.categorized = true;
-        console.log(`Updated categorized to true`);
     } else {
         metadata_obj.labels.categorized = false;
     }
-    console.log("-----------------------");
+    console.log(`\tCategory: ${data_obj.labels.category};\n\t\tset categorized to ${metadata_obj.labels.categorized}`);
 }
 
 /**
@@ -69,13 +65,44 @@ async function check_for_landing_404(data_obj, metadata_obj) {
             if (response.status === 404) {
                 metadata_obj.labels.landingUrl404d = true;
                 outstanding_errors.push(data_obj.url);
-                console.log(`Updated 404 to true`);
             } else {
                 metadata_obj.labels.landingUrl404d = false;
             }
         } catch (e) {
+            
             outstanding_errors.push(data_obj.url);
         }
+    } else {
+        console.log(`\n\t-- Error: No landing url located! --\n`)
+    }
+}
+
+/**
+ * For each dataset in the data obj, check to see if the dataset url returns 404;
+ * update the metadata accordingly.
+ * @param {JSONObject} data_obj the data object to check
+ * @param {JSONObject} metadata_obj the metadata object to update
+ */
+async function check_dataset_urls(data_obj_datasets, metadata_obj_datasets) {
+    // Get the dataset formats: json, csv, xml, etc.
+    const dataset_keys = Object.keys(data_obj_datasets);
+    if (dataset_keys.length) {
+        // For each format, GET the url; set the appropriate 'url404d' metadata boolean appropriately.
+        dataset_keys.forEach(async (dataset_format) => {
+            try {
+                const response = await axios.get(data_obj_datasets[dataset_format].url);
+                if (response.status === 404) {
+                    console.log("");
+                    metadata_obj_datasets[dataset_format].url404d = true;
+                } else {
+                    metadata_obj_datasets[dataset_format].url404d = false;
+                }
+            } catch (err) {
+                metadata_obj_datasets[dataset_format].url404d = true;
+            }
+        });
+    } else {
+        console.log("check_dataset_urls: no datasets.");
     }
 }
 
@@ -121,9 +148,11 @@ async function compare_data(data_json, metadata_json) {
     for (let i = 0; i < data_json.length; i++) {
         const data_obj = data_json[i];
         const metadata_obj = metadata_json.find(obj => obj.url === data_obj.url);
+        console.log(`Updating metadata for entry ${data_obj.url}`);
         if (metadata_obj) {
-            await update_categorized(data_obj, metadata_obj);
+            await check_categorized(data_obj, metadata_obj);
             await check_for_landing_404(data_obj, metadata_obj);
+            await check_dataset_urls(data_obj.data.datasets, metadata_obj.data.datasets);
             await check_if_dataset_is_filterable(metadata_obj);
         }
     }
