@@ -29,4 +29,23 @@ The update_github.js script is responsible for updating the metadata.json file i
 - It then sends a PUT request to the GitHub API, updating the file with the new content and providing the necessary authentication using a GitHub token.
 - Finally, it logs the update status or any errors that occur during the process.
 
+## Data.json Tracker
+The tools flow is as follows: 
+- It fetches the data.json list from the ODEN Client GitHub
+- It checks if the URLs are downloaded in the cache, if not it downloads them 
+- It fetches each URL from the web and compares against the cached version for any changes to the datasets 
+- At the end of executing it updates a local log file with any errors encountered, and the results it found. Additionally, it sends an email to admins with the errors and results.
+
+Do Note to run this program an environment file is required and can be found in the Backend Tools -> Data.json Tracker folder in the Google Drive.
+### main.js
+Contains all the logic for finding differences between cached files and fetched files
+
+### test.js
+Contains code for pushing/updating a GitHub file using the GitHub rest API. This code is used throughout the project.
+
+## Metadata Updater
+This tools responsibility is to keep the “categorized”, “landing404d”, “isFilterable”, and “schema404d” booleans within the metadata.json file in sync with the data.json file found in the ODEN Client GitHub.
+### main.js
+Contains all the logic for comparing the data.json and metadata.json files from the ODEN Client GitHub to find and update any differences with the fields mentioned above.
+
 ## Notification API
