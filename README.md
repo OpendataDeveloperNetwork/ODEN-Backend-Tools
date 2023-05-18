@@ -6,7 +6,7 @@ The filter validator tool is run once everyday and validates the entries from th
 
 This uses two javascript files which are the filter_validator.js and update_github.js
 
-# filter_validator.js
+### filter_validator.js
 
 The filter_validator.js script is used to validate filter entries embedded in each data entry with their respective dataset and schema. It performs validation checks and sends email notifications for any invalid entries. Here's an overview of the script:
 
@@ -18,7 +18,7 @@ The filter_validator.js script is used to validate filter entries embedded in ea
 - Once the validation process is complete, it sends a notification email containing the list of invalid entries using the send_notification function.
 - Finally, it returns a result object containing the validation information for each entry.
 
-# update_github.js
+### update_github.js
 
 The update_github.js script is responsible for updating the metadata.json file in a GitHub repository with new content. It utilizes the GitHub API for fetching and updating the file. Here's an overview of the script:
 
