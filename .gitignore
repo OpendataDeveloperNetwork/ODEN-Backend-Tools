@@ -4,3 +4,5 @@
 /data-json-tracker/log.txt
 /data-json-tracker/.env
 package-lock.json
+/metadata-updater/node_modules
+/metadata-updater/.env
