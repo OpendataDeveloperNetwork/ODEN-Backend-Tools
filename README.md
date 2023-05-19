@@ -1,5 +1,37 @@
 # ODEN-Backend-Tools
 
+## Directory Structure
+The structure and intended contents of the directories in this project are shown in the diagram below:
+
+```
+project
+│   README.md
+│   .gitignore
+│   package-lock.json    
+│
+└───data-json-tracker
+│   │   main.js
+│   │   test.js
+│   │   package.json
+│   └───.env {Not included}
+│
+│
+└───filter_validator
+│   │   filter_validator.js
+│   │   update_github.js
+│   │   .gitignore
+│   │   .env {Not included}
+│   └───package.json    
+│
+└───firestore-duplicate-deleter
+│   │   delete-dups.js
+│   └───package.json    
+│
+└───metadata-updater
+    │   main.js
+    │   package.json  
+    └───.env {Not included}
+```
 ## Filter validator tool
 
 The filter validator tool is run once everyday and validates the entries from the data.json. It checks to see if the filters are working properly and if not, it will update the metadata.json and send an email to the admins detailing which entry url's failed and the cause of the error. 
